@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MdEdit, MdDelete, MdViewModule, MdViewList } from 'react-icons/md';
 import { Project, Task } from '../types';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/mockDatabase';
 import TaskModal from './TaskModal';
@@ -184,14 +185,14 @@ export default function TaskList({ project }: TaskListProps) {
             onClick={() => setViewMode('card')}
             title="カード表示"
           >
-            ⊞
+            <MdViewModule size={20} />
           </button>
           <button
             className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
             title="リスト表示"
           >
-            ☰
+            <MdViewList size={20} />
           </button>
         </div>
       </div>
@@ -213,14 +214,14 @@ export default function TaskList({ project }: TaskListProps) {
                       className="btn-icon"
                       title="編集"
                     >
-                      ✏️
+                      <MdEdit size={24} style={{color: '#3b82f6'}} />
                     </button>
                     <button
                       onClick={() => handleDeleteTask(task)}
                       className="btn-icon delete"
                       title="削除"
                     >
-                      🗑️
+                      <MdDelete size={24} style={{color: '#ef4444'}} />
                     </button>
                   </div>
                 </div>
@@ -303,14 +304,14 @@ export default function TaskList({ project }: TaskListProps) {
                       className="btn-icon"
                       title="編集"
                     >
-                      ✏️
+                      <MdEdit size={24} style={{color: '#3b82f6'}} />
                     </button>
                     <button
                       onClick={() => handleDeleteTask(task)}
                       className="btn-icon delete"
                       title="削除"
                     >
-                      🗑️
+                      <MdDelete size={24} style={{color: '#ef4444'}} />
                     </button>
                   </div>
                 </div>

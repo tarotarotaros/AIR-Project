@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MdLabel, MdPerson, MdInventory, MdEdit, MdDelete } from 'react-icons/md';
 import { StatusMaster, AssigneeMaster, DeliverableTypeMaster } from '../types';
 import {
   getStatusMasters, createStatusMaster, updateStatusMaster, deleteStatusMaster,
@@ -178,9 +179,9 @@ export default function MasterManagement() {
   };
 
   const tabs = [
-    { id: 'status' as MasterType, label: 'ステータス', icon: '🏷️' },
-    { id: 'assignee' as MasterType, label: '担当者', icon: '👤' },
-    { id: 'deliverableType' as MasterType, label: '成果物種類', icon: '📦' },
+    { id: 'status' as MasterType, label: 'ステータス', icon: MdLabel },
+    { id: 'assignee' as MasterType, label: '担当者', icon: MdPerson },
+    { id: 'deliverableType' as MasterType, label: '成果物種類', icon: MdInventory },
   ];
 
   const renderStatusMasters = () => (
@@ -206,8 +207,8 @@ export default function MasterManagement() {
                   <span>{status.name}</span>
                 </div>
                 <div className="master-item-actions">
-                  <button onClick={() => handleEditStatus(status)} className="btn-icon">✏️</button>
-                  <button onClick={() => handleDeleteStatus(status)} className="btn-icon delete">🗑️</button>
+                  <button onClick={() => handleEditStatus(status)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
+                  <button onClick={() => handleDeleteStatus(status)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
                 </div>
               </div>
             ))}
@@ -227,8 +228,8 @@ export default function MasterManagement() {
                   <span>{status.name}</span>
                 </div>
                 <div className="master-item-actions">
-                  <button onClick={() => handleEditStatus(status)} className="btn-icon">✏️</button>
-                  <button onClick={() => handleDeleteStatus(status)} className="btn-icon delete">🗑️</button>
+                  <button onClick={() => handleEditStatus(status)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
+                  <button onClick={() => handleDeleteStatus(status)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
                 </div>
               </div>
             ))}
@@ -258,8 +259,8 @@ export default function MasterManagement() {
               </div>
             </div>
             <div className="master-item-actions">
-              <button onClick={() => handleEditAssignee(assignee)} className="btn-icon">✏️</button>
-              <button onClick={() => handleDeleteAssignee(assignee)} className="btn-icon delete">🗑️</button>
+              <button onClick={() => handleEditAssignee(assignee)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
+              <button onClick={() => handleDeleteAssignee(assignee)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
             </div>
           </div>
         ))}
@@ -293,8 +294,8 @@ export default function MasterManagement() {
               ></div>
             </div>
             <div className="master-item-actions">
-              <button onClick={() => handleEditDeliverableType(deliverableType)} className="btn-icon">✏️</button>
-              <button onClick={() => handleDeleteDeliverableType(deliverableType)} className="btn-icon delete">🗑️</button>
+              <button onClick={() => handleEditDeliverableType(deliverableType)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
+              <button onClick={() => handleDeleteDeliverableType(deliverableType)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
             </div>
           </div>
         ))}
@@ -328,7 +329,7 @@ export default function MasterManagement() {
             className={`master-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
-            <span className="tab-icon">{tab.icon}</span>
+            <tab.icon className="tab-icon" size={22} />
             <span className="tab-label">{tab.label}</span>
           </button>
         ))}

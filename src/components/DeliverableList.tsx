@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MdEdit, MdDelete, MdViewModule, MdViewList, MdDescription, MdComputer, MdDesignServices, MdBarChart, MdInventory } from 'react-icons/md';
 import { Project, Deliverable } from '../types';
 import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable } from '../services/mockDatabase';
 import DeliverableModal from './DeliverableModal';
@@ -96,12 +97,12 @@ export default function DeliverableList({ project }: DeliverableListProps) {
 
   const getTypeIcon = (type: Deliverable['type']) => {
     switch (type) {
-      case 'document': return '📄';
-      case 'software': return '💻';
-      case 'design': return '🎨';
-      case 'data': return '📊';
-      case 'other': return '📦';
-      default: return '📦';
+      case 'document': return <MdDescription size={24} />;
+      case 'software': return <MdComputer size={24} />;
+      case 'design': return <MdDesignServices size={24} />;
+      case 'data': return <MdBarChart size={24} />;
+      case 'other': return <MdInventory size={24} />;
+      default: return <MdInventory size={24} />;
     }
   };
 
@@ -207,14 +208,14 @@ export default function DeliverableList({ project }: DeliverableListProps) {
             onClick={() => setViewMode('card')}
             title="カード表示"
           >
-            ⊞
+            <MdViewModule size={20} />
           </button>
           <button
             className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
             onClick={() => setViewMode('list')}
             title="リスト表示"
           >
-            ☰
+            <MdViewList size={20} />
           </button>
         </div>
       </div>
@@ -242,14 +243,14 @@ export default function DeliverableList({ project }: DeliverableListProps) {
                       className="btn-icon"
                       title="編集"
                     >
-                      ✏️
+                      <MdEdit size={24} style={{color: '#3b82f6'}} />
                     </button>
                     <button
                       onClick={() => handleDeleteDeliverable(deliverable)}
                       className="btn-icon delete"
                       title="削除"
                     >
-                      🗑️
+                      <MdDelete size={24} style={{color: '#ef4444'}} />
                     </button>
                   </div>
                 </div>
@@ -335,14 +336,14 @@ export default function DeliverableList({ project }: DeliverableListProps) {
                       className="btn-icon"
                       title="編集"
                     >
-                      ✏️
+                      <MdEdit size={24} style={{color: '#3b82f6'}} />
                     </button>
                     <button
                       onClick={() => handleDeleteDeliverable(deliverable)}
                       className="btn-icon delete"
                       title="削除"
                     >
-                      🗑️
+                      <MdDelete size={24} style={{color: '#ef4444'}} />
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MdAccountTree, MdList, MdInventory, MdSettings } from 'react-icons/md';
 import { Project, TabType } from '../types';
 import TaskFlow from './TaskFlow';
 import TaskList from './TaskList';
@@ -21,10 +22,10 @@ export default function ProjectTabs({ project }: ProjectTabsProps) {
   }
 
   const tabs = [
-    { id: 'flow' as TabType, label: 'フロー図', icon: '🔄' },
-    { id: 'tasks' as TabType, label: 'タスク一覧', icon: '📋' },
-    { id: 'deliverables' as TabType, label: '成果物一覧', icon: '📦' },
-    { id: 'masters' as TabType, label: 'マスタ管理', icon: '⚙️' },
+    { id: 'flow' as TabType, label: 'フロー図', icon: MdAccountTree },
+    { id: 'tasks' as TabType, label: 'タスク一覧', icon: MdList },
+    { id: 'deliverables' as TabType, label: '成果物一覧', icon: MdInventory },
+    { id: 'masters' as TabType, label: 'マスタ管理', icon: MdSettings },
   ];
 
   const renderContent = () => {
@@ -53,7 +54,7 @@ export default function ProjectTabs({ project }: ProjectTabsProps) {
               className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
             >
-              <span className="tab-icon">{tab.icon}</span>
+              <tab.icon className="tab-icon" size={24} />
               <span className="tab-label">{tab.label}</span>
             </button>
           ))}

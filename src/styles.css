@@ -566,7 +566,9 @@ button:active {
 }
 
 .tab-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
 }
 
 .tab-label {
@@ -673,12 +675,15 @@ button:active {
   padding: 0.25rem;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 1.125rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-icon:hover {
   background-color: #f3f4f6;
+  transform: scale(1.1);
 }
 
 .btn-icon.delete:hover {
@@ -806,7 +811,9 @@ button:active {
 }
 
 .type-icon {
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .deliverable-actions {
@@ -1129,7 +1136,9 @@ button:active {
 }
 
 .deliverable-name-with-icon .type-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .status-badge-list, .priority-badge-list, .type-badge-list {
