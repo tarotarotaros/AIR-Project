@@ -298,40 +298,36 @@ export async function getConnections(projectId: number): Promise<FlowConnection[
 }
 
 export async function createConnection(
-  projectId: number,
-  sourceType: 'task' | 'deliverable',
-  sourceId: number,
-  targetType: 'task' | 'deliverable',
-  targetId: number
+  connection: Omit<FlowConnection, 'id' | 'created_at' | 'updated_at'>
 ): Promise<FlowConnection> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
-  
+
   // 既存の接続をチェック
-  const existingConnection = connections.find(c => 
-    c.project_id === projectId &&
-    c.source_type === sourceType &&
-    c.source_id === sourceId &&
-    c.target_type === targetType &&
-    c.target_id === targetId
+  const existingConnection = connections.find(c =>
+    c.project_id === connection.project_id &&
+    c.source_type === connection.source_type &&
+    c.source_id === connection.source_id &&
+    c.target_type === connection.target_type &&
+    c.target_id === connection.target_id
   );
-  
+
   if (existingConnection) {
     return existingConnection;
   }
-  
+
   const newConnection: FlowConnection = {
     id: connectionIdCounter++,
-    project_id: projectId,
-    source_type: sourceType,
-    source_id: sourceId,
-    target_type: targetType,
-    target_id: targetId,
+    project_id: connection.project_id,
+    source_type: connection.source_type,
+    source_id: connection.source_id,
+    target_type: connection.target_type,
+    target_id: connection.target_id,
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };
-  
+
   connections.push(newConnection);
   saveToStorage(CONNECTIONS_KEY, connections);
   return newConnection;

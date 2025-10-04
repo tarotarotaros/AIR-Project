@@ -23,6 +23,12 @@ import DeliverableModal from './DeliverableModal';
 import CustomTaskNode from './CustomTaskNode';
 import CustomDeliverableNode from './CustomDeliverableNode';
 
+// nodeTypesをコンポーネント外で定義（重要！）
+const nodeTypes = {
+  customTask: CustomTaskNode,
+  customDeliverable: CustomDeliverableNode,
+};
+
 interface TaskFlowProps {
   project: Project | null;
 }
@@ -45,12 +51,6 @@ const getPriorityBorder = (priority: Task['priority']) => {
     case 'critical': return '3px solid #dc2626';
     default: return '2px solid #6b7280';
   }
-};
-
-// カスタムノードタイプの定義
-const nodeTypes = {
-  customTask: CustomTaskNode,
-  customDeliverable: CustomDeliverableNode,
 };
 
 export default function TaskFlow({ project }: TaskFlowProps) {
@@ -101,6 +101,8 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           onEdit: handleEditTask,
           onDelete: handleDeleteTask,
         },
+        connectable: true,
+        draggable: true,
       });
     });
     
@@ -118,6 +120,8 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           onEdit: handleEditDeliverable,
           onDelete: handleDeleteDeliverable,
         },
+        connectable: true,
+        draggable: true,
       });
     });
     
@@ -130,6 +134,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       id: `connection-${connection.id}`,
       source: `${connection.source_type}-${connection.source_id}`,
       target: `${connection.target_type}-${connection.target_id}`,
+      type: 'default',
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 20,
@@ -140,9 +145,10 @@ export default function TaskFlow({ project }: TaskFlowProps) {
         strokeWidth: 2,
         stroke: '#2563eb',
       },
+      animated: false,
       data: { connectionId: connection.id },
     }));
-    
+
     setEdges(allEdges);
   }, [connections, setEdges]);
 
@@ -308,33 +314,37 @@ export default function TaskFlow({ project }: TaskFlowProps) {
 
   const onConnect = useCallback(
     async (params: Connection) => {
-      if (!project || !params.source || !params.target) return;
-      
+      if (!project || !params.source || !params.target) {
+        return;
+      }
+
       // ソースとターゲットのタイプとIDを抽出
       const [sourceType, sourceIdStr] = params.source.split('-');
       const [targetType, targetIdStr] = params.target.split('-');
       const sourceId = parseInt(sourceIdStr);
       const targetId = parseInt(targetIdStr);
-      
-      if (!sourceType || !targetType || isNaN(sourceId) || isNaN(targetId)) return;
-      
+
+      if (!sourceType || !targetType || isNaN(sourceId) || isNaN(targetId)) {
+        return;
+      }
+
       try {
         // データベースに接続を保存
-        await createConnection(
-          project.id,
-          sourceType as 'task' | 'deliverable',
-          sourceId,
-          targetType as 'task' | 'deliverable',
-          targetId
-        );
-        
-        // 接続を再読み込み
-        loadConnections();
+        const newConnection = await createConnection({
+          project_id: project.id,
+          source_type: sourceType as 'task' | 'deliverable',
+          source_id: sourceId,
+          target_type: targetType as 'task' | 'deliverable',
+          target_id: targetId
+        });
+
+        // ステートを直接更新
+        setConnections(prev => [...prev, newConnection]);
       } catch (error) {
         console.error('Failed to create connection:', error);
       }
     },
-    [project, loadConnections]
+    [project, connections]
   );
 
   const onEdgesDelete = useCallback(
@@ -382,6 +392,8 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           onConnect={onConnect}
           onNodeDragStop={onNodeDragStop}
           fitView
+          connectOnClick={false}
+          connectionMode="strict"
           connectionLineStyle={{ strokeWidth: 2, stroke: '#2563eb' }}
           defaultEdgeOptions={{
             markerEnd: {
