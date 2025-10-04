@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { MdAccountTree, MdList, MdInventory, MdSettings } from 'react-icons/md';
+import { MdAccountTree, MdList, MdInventory, MdSettings, MdManageAccounts } from 'react-icons/md';
 import { Project, TabType } from '../types';
 import TaskFlow from './TaskFlow';
 import TaskList from './TaskList';
 import DeliverableList from './DeliverableList';
 import MasterManagement from './MasterManagement';
+import ProjectSettings from './ProjectSettings';
 
 interface ProjectTabsProps {
   project: Project | null;
+  onProjectUpdate?: (updatedProject: Project) => void;
+  onProjectDelete?: () => void;
 }
 
-export default function ProjectTabs({ project }: ProjectTabsProps) {
+export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete }: ProjectTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('flow');
 
   if (!project) {
@@ -26,6 +29,7 @@ export default function ProjectTabs({ project }: ProjectTabsProps) {
     { id: 'tasks' as TabType, label: 'タスク一覧', icon: MdList },
     { id: 'deliverables' as TabType, label: '成果物一覧', icon: MdInventory },
     { id: 'masters' as TabType, label: 'マスタ管理', icon: MdSettings },
+    { id: 'settings' as TabType, label: 'プロジェクト設定', icon: MdManageAccounts },
   ];
 
   const renderContent = () => {
@@ -38,6 +42,8 @@ export default function ProjectTabs({ project }: ProjectTabsProps) {
         return <DeliverableList project={project} />;
       case 'masters':
         return <MasterManagement />;
+      case 'settings':
+        return <ProjectSettings project={project} onProjectUpdate={onProjectUpdate} onProjectDelete={onProjectDelete} />;
       default:
         return <TaskFlow project={project} />;
     }

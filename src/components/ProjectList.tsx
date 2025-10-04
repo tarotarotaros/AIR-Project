@@ -16,10 +16,34 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
     loadProjects();
   }, []);
 
+  // デバッグ用：LocalStorageをクリアする関数
+  const clearStorage = () => {
+    if (window.confirm('LocalStorageをクリアしますか？すべてのデータが削除されます。')) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
+
   const loadProjects = async () => {
     try {
       const projectsData = await getProjects();
-      setProjects(projectsData);
+      console.log('Loaded projects data:', projectsData);
+      
+      // データの整合性チェック
+      const validProjects = projectsData.filter(project => {
+        if (!project || typeof project !== 'object') {
+          console.warn('Invalid project found:', project);
+          return false;
+        }
+        if (typeof project.name !== 'string') {
+          console.warn('Project with invalid name:', project);
+          return false;
+        }
+        return true;
+      });
+      
+      console.log('Valid projects:', validProjects);
+      setProjects(validProjects);
     } catch (error) {
       console.error('Failed to load projects:', error);
     }
@@ -39,25 +63,18 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
     }
   };
 
-  const handleDeleteProject = async (project: Project) => {
-    if (!confirm(`プロジェクト "${project.name}" を削除しますか？`)) return;
-    
-    try {
-      await deleteProject(project.id);
-      setProjects(projects.filter(p => p.id !== project.id));
-      if (selectedProject?.id === project.id) {
-        onSelectProject(projects[0] || null);
-      }
-    } catch (error) {
-      console.error('Failed to delete project:', error);
-    }
-  };
+  // 削除機能は ProjectSettings に移動したため削除
 
   return (
     <div className="project-list">
       <div className="project-header">
         <h2>プロジェクト</h2>
-        <button onClick={() => setIsCreating(true)}>新規作成</button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => setIsCreating(true)}>新規作成</button>
+          <button onClick={clearStorage} style={{ backgroundColor: '#dc2626', color: 'white', fontSize: '0.8rem' }}>
+            Reset
+          </button>
+        </div>
       </div>
 
       {isCreating && (
@@ -84,16 +101,7 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
             className={`project-item ${selectedProject?.id === project.id ? 'selected' : ''}`}
             onClick={() => onSelectProject(project)}
           >
-            <div className="project-name">{project.name}</div>
-            <button
-              className="delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteProject(project);
-              }}
-            >
-              削除
-            </button>
+            <div className="project-name">{project?.name || 'Unnamed Project'}</div>
           </div>
         ))}
       </div>

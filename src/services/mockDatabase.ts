@@ -79,7 +79,7 @@ export async function createProject(name: string, description?: string): Promise
   return newProject;
 }
 
-export async function updateProject(id: number, name: string, description?: string): Promise<Project> {
+export async function updateProject(id: number, updates: Partial<Pick<Project, 'name' | 'description'>>): Promise<Project> {
   await new Promise(resolve => setTimeout(resolve, 100));
   
   const projects: Project[] = loadFromStorage(PROJECTS_KEY);
@@ -91,8 +91,7 @@ export async function updateProject(id: number, name: string, description?: stri
   
   projects[projectIndex] = {
     ...projects[projectIndex],
-    name,
-    description: description || '',
+    ...updates,
     updated_at: getCurrentTimestamp(),
   };
   
