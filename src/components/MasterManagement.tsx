@@ -5,7 +5,7 @@ import {
   getStatusMasters, createStatusMaster, updateStatusMaster, deleteStatusMaster,
   getAssigneeMasters, createAssigneeMaster, updateAssigneeMaster, deleteAssigneeMaster,
   getDeliverableTypeMasters, createDeliverableTypeMaster, updateDeliverableTypeMaster, deleteDeliverableTypeMaster
-} from '../services/mockDatabase';
+} from '../services/databaseAdapter';
 import StatusMasterModal from './StatusMasterModal';
 import AssigneeMasterModal from './AssigneeMasterModal';
 import DeliverableTypeMasterModal from './DeliverableTypeMasterModal';

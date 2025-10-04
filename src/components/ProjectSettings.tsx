@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MdEdit, MdDelete, MdSave, MdCancel } from 'react-icons/md';
 import { Project } from '../types';
-import { updateProject } from '../services/mockDatabase';
+import { updateProject } from '../services/databaseAdapter';
 import ProjectDeleteModal from './ProjectDeleteModal';
 
 interface ProjectSettingsProps {

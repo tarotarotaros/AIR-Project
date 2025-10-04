@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MdWarning, MdDelete } from 'react-icons/md';
 import { Project } from '../types';
-import { deleteProject } from '../services/mockDatabase';
+import { deleteProject } from '../services/databaseAdapter';
 import Modal from './Modal';
 
 interface ProjectDeleteModalProps {

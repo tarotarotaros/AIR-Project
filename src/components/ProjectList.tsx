@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { MdAdd } from 'react-icons/md';
 import { Project } from '../types';
-import { getProjects, createProject, deleteProject } from '../services/mockDatabase';
+import { getProjects, createProject, deleteProject } from '../services/databaseAdapter';
 
 interface ProjectListProps {
   onSelectProject: (project: Project) => void;
@@ -16,36 +17,23 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
     loadProjects();
   }, []);
 
-  // デバッグ用：LocalStorageをクリアする関数
-  const clearStorage = () => {
-    if (window.confirm('LocalStorageをクリアしますか？すべてのデータが削除されます。')) {
-      localStorage.clear();
-      window.location.reload();
-    }
-  };
-
   const loadProjects = async () => {
     try {
       const projectsData = await getProjects();
-      console.log('Loaded projects data:', projectsData);
       
-      // データの整合性チェック
+      // データの安全性チェック
       const validProjects = projectsData.filter(project => {
-        if (!project || typeof project !== 'object') {
-          console.warn('Invalid project found:', project);
-          return false;
-        }
-        if (typeof project.name !== 'string') {
-          console.warn('Project with invalid name:', project);
-          return false;
-        }
-        return true;
+        return project && 
+               typeof project === 'object' && 
+               typeof project.name === 'string' &&
+               typeof project.id !== 'undefined';
       });
       
-      console.log('Valid projects:', validProjects);
       setProjects(validProjects);
     } catch (error) {
       console.error('Failed to load projects:', error);
+      // エラーの場合は空の配列を設定
+      setProjects([]);
     }
   };
 
@@ -69,12 +57,13 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
     <div className="project-list">
       <div className="project-header">
         <h2>プロジェクト</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={() => setIsCreating(true)}>新規作成</button>
-          <button onClick={clearStorage} style={{ backgroundColor: '#dc2626', color: 'white', fontSize: '0.8rem' }}>
-            Reset
-          </button>
-        </div>
+        <button 
+          onClick={() => setIsCreating(true)} 
+          className="btn-icon"
+          title="新規プロジェクト作成"
+        >
+          <MdAdd size={24} />
+        </button>
       </div>
 
       {isCreating && (

@@ -17,7 +17,7 @@ import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
   getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable,
   getConnections, createConnection, deleteConnection, deleteConnectionsByNodeId
-} from '../services/mockDatabase';
+} from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
 import DeliverableModal from './DeliverableModal';
 import CustomTaskNode from './CustomTaskNode';

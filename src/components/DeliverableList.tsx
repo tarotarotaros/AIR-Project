@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdViewModule, MdViewList, MdDescription, MdComputer, MdDesignServices, MdBarChart, MdInventory } from 'react-icons/md';
 import { Project, Deliverable } from '../types';
-import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable } from '../services/mockDatabase';
+import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable } from '../services/databaseAdapter';
 import DeliverableModal from './DeliverableModal';
 
 interface DeliverableListProps {

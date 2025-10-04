@@ -121,6 +121,25 @@ body {
   color: #374151;
 }
 
+.project-header .btn-icon {
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.project-header .btn-icon:hover {
+  background-color: #2563eb;
+  transform: scale(1.1);
+}
+
 .create-project {
   display: flex;
   flex-direction: column;

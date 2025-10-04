@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdViewModule, MdViewList } from 'react-icons/md';
 import { Project, Task } from '../types';
-import { getTasks, createTask, updateTask, deleteTask } from '../services/mockDatabase';
+import { getTasks, createTask, updateTask, deleteTask } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
 
 interface TaskListProps {

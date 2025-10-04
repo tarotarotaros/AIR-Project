@@ -9,7 +9,8 @@
       "Bash(npm run tauri:*)",
       "Bash(npm run dev:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

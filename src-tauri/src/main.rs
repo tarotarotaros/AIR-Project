@@ -37,12 +37,78 @@ fn main() {
             );",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "create_deliverables_table",
+            sql: "CREATE TABLE deliverables (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER REFERENCES projects(id),
+                name TEXT NOT NULL,
+                description TEXT,
+                status TEXT CHECK(status IN ('not_ready', 'ready', 'completed')) DEFAULT 'not_ready',
+                type TEXT CHECK(type IN ('document', 'software', 'design', 'data', 'other')) DEFAULT 'other',
+                due_date DATE,
+                position_x REAL DEFAULT 100,
+                position_y REAL DEFAULT 100,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "create_connections_table",
+            sql: "CREATE TABLE connections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER REFERENCES projects(id),
+                source_type TEXT CHECK(source_type IN ('task', 'deliverable')) NOT NULL,
+                source_id INTEGER NOT NULL,
+                target_type TEXT CHECK(target_type IN ('task', 'deliverable')) NOT NULL,
+                target_id INTEGER NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "create_master_tables",
+            sql: "CREATE TABLE status_masters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                type TEXT CHECK(type IN ('task', 'deliverable')) NOT NULL,
+                color TEXT NOT NULL,
+                display_order INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            CREATE TABLE assignee_masters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                email TEXT,
+                role TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            CREATE TABLE deliverable_type_masters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                icon TEXT NOT NULL,
+                color TEXT NOT NULL,
+                display_order INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );",
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
         .plugin(
             tauri_plugin_sql::Builder::default()
-                .add_migrations("sqlite:database.db", migrations)
+                .add_migrations("sqlite:project_manager.db", migrations)
                 .build(),
         )
         .run(tauri::generate_context!())
