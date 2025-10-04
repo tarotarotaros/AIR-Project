@@ -1,13 +1,15 @@
-import { Project, Task, Deliverable } from "../types";
+import { Project, Task, Deliverable, FlowConnection } from "../types";
 
 // Mock database using localStorage
 const PROJECTS_KEY = 'pm_projects';
 const TASKS_KEY = 'pm_tasks';
 const DELIVERABLES_KEY = 'pm_deliverables';
+const CONNECTIONS_KEY = 'pm_connections';
 
 let projectIdCounter = 1;
 let taskIdCounter = 1;
 let deliverableIdCounter = 1;
+let connectionIdCounter = 1;
 
 // Helper functions
 function saveToStorage(key: string, data: any) {
@@ -28,6 +30,7 @@ function initializeCounters() {
   const projects: Project[] = loadFromStorage(PROJECTS_KEY);
   const tasks: Task[] = loadFromStorage(TASKS_KEY);
   const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
+  const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
   
   if (projects.length > 0) {
     projectIdCounter = Math.max(...projects.map(p => p.id)) + 1;
@@ -37,6 +40,9 @@ function initializeCounters() {
   }
   if (deliverables.length > 0) {
     deliverableIdCounter = Math.max(...deliverables.map(d => d.id)) + 1;
+  }
+  if (connections.length > 0) {
+    connectionIdCounter = Math.max(...connections.map(c => c.id)) + 1;
   }
 }
 
@@ -277,4 +283,73 @@ export async function updateDeliverablePosition(id: number, x: number, y: number
     };
     saveToStorage(DELIVERABLES_KEY, deliverables);
   }
+}
+
+// Connection CRUD operations
+export async function getConnections(projectId: number): Promise<FlowConnection[]> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
+  return connections.filter(c => c.project_id === projectId);
+}
+
+export async function createConnection(
+  projectId: number,
+  sourceType: 'task' | 'deliverable',
+  sourceId: number,
+  targetType: 'task' | 'deliverable',
+  targetId: number
+): Promise<FlowConnection> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
+  
+  // 既存の接続をチェック
+  const existingConnection = connections.find(c => 
+    c.project_id === projectId &&
+    c.source_type === sourceType &&
+    c.source_id === sourceId &&
+    c.target_type === targetType &&
+    c.target_id === targetId
+  );
+  
+  if (existingConnection) {
+    return existingConnection;
+  }
+  
+  const newConnection: FlowConnection = {
+    id: connectionIdCounter++,
+    project_id: projectId,
+    source_type: sourceType,
+    source_id: sourceId,
+    target_type: targetType,
+    target_id: targetId,
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  connections.push(newConnection);
+  saveToStorage(CONNECTIONS_KEY, connections);
+  return newConnection;
+}
+
+export async function deleteConnection(id: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
+  const filteredConnections = connections.filter(c => c.id !== id);
+  saveToStorage(CONNECTIONS_KEY, filteredConnections);
+}
+
+export async function deleteConnectionsByNodeId(
+  nodeType: 'task' | 'deliverable',
+  nodeId: number
+): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
+  const filteredConnections = connections.filter(c => 
+    !((c.source_type === nodeType && c.source_id === nodeId) ||
+      (c.target_type === nodeType && c.target_id === nodeId))
+  );
+  saveToStorage(CONNECTIONS_KEY, filteredConnections);
 }

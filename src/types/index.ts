@@ -44,3 +44,14 @@ export interface FlowNode {
   data: Task | Deliverable;
   position: { x: number; y: number };
 }
+
+export interface FlowConnection {
+  id: number;
+  project_id: number;
+  source_type: 'task' | 'deliverable';
+  source_id: number;
+  target_type: 'task' | 'deliverable';
+  target_id: number;
+  created_at: string;
+  updated_at: string;
+}

@@ -12,10 +12,11 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Task, Project, Deliverable } from '../types';
+import { Task, Project, Deliverable, FlowConnection } from '../types';
 import { 
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
-  getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable 
+  getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable,
+  getConnections, createConnection, deleteConnection, deleteConnectionsByNodeId
 } from '../services/mockDatabase';
 import TaskModal from './TaskModal';
 import DeliverableModal from './DeliverableModal';
@@ -55,6 +56,7 @@ const nodeTypes = {
 export default function TaskFlow({ project }: TaskFlowProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
+  const [connections, setConnections] = useState<FlowConnection[]>([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   
@@ -72,9 +74,11 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     if (project) {
       loadTasks();
       loadDeliverables();
+      loadConnections();
     } else {
       setTasks([]);
       setDeliverables([]);
+      setConnections([]);
       setNodes([]);
       setEdges([]);
     }
@@ -120,6 +124,28 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     setNodes(allNodes);
   }, [tasks, deliverables, setNodes]);
 
+  useEffect(() => {
+    // 接続データからReact Flowのエッジを生成
+    const allEdges = connections.map(connection => ({
+      id: `connection-${connection.id}`,
+      source: `${connection.source_type}-${connection.source_id}`,
+      target: `${connection.target_type}-${connection.target_id}`,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: '#2563eb',
+      },
+      style: {
+        strokeWidth: 2,
+        stroke: '#2563eb',
+      },
+      data: { connectionId: connection.id },
+    }));
+    
+    setEdges(allEdges);
+  }, [connections, setEdges]);
+
   const getStatusLabel = (status: Task['status']) => {
     switch (status) {
       case 'not_started': return '未開始';
@@ -159,6 +185,17 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       setDeliverables(deliverablesData);
     } catch (error) {
       console.error('Failed to load deliverables:', error);
+    }
+  };
+
+  const loadConnections = async () => {
+    if (!project) return;
+    
+    try {
+      const connectionsData = await getConnections(project.id);
+      setConnections(connectionsData);
+    } catch (error) {
+      console.error('Failed to load connections:', error);
     }
   };
 
@@ -236,7 +273,9 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   const handleDeleteTask = async (task: Task) => {
     try {
       await deleteTask(task.id);
+      await deleteConnectionsByNodeId('task', task.id);
       setTasks(tasks.filter(t => t.id !== task.id));
+      loadConnections(); // 接続を再読み込み
     } catch (error) {
       console.error('Failed to delete task:', error);
     }
@@ -245,7 +284,9 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   const handleDeleteDeliverable = async (deliverable: Deliverable) => {
     try {
       await deleteDeliverable(deliverable.id);
+      await deleteConnectionsByNodeId('deliverable', deliverable.id);
       setDeliverables(deliverables.filter(d => d.id !== deliverable.id));
+      loadConnections(); // 接続を再読み込み
     } catch (error) {
       console.error('Failed to delete deliverable:', error);
     }
@@ -266,23 +307,50 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   }, []);
 
   const onConnect = useCallback(
-    (params: Connection) => {
-      const newEdge = {
-        ...params,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
-          color: '#2563eb',
-        },
-        style: {
-          strokeWidth: 2,
-          stroke: '#2563eb',
-        },
-      };
-      setEdges((eds) => addEdge(newEdge, eds));
+    async (params: Connection) => {
+      if (!project || !params.source || !params.target) return;
+      
+      // ソースとターゲットのタイプとIDを抽出
+      const [sourceType, sourceIdStr] = params.source.split('-');
+      const [targetType, targetIdStr] = params.target.split('-');
+      const sourceId = parseInt(sourceIdStr);
+      const targetId = parseInt(targetIdStr);
+      
+      if (!sourceType || !targetType || isNaN(sourceId) || isNaN(targetId)) return;
+      
+      try {
+        // データベースに接続を保存
+        await createConnection(
+          project.id,
+          sourceType as 'task' | 'deliverable',
+          sourceId,
+          targetType as 'task' | 'deliverable',
+          targetId
+        );
+        
+        // 接続を再読み込み
+        loadConnections();
+      } catch (error) {
+        console.error('Failed to create connection:', error);
+      }
     },
-    [setEdges]
+    [project, loadConnections]
+  );
+
+  const onEdgesDelete = useCallback(
+    async (edgesToDelete: Edge[]) => {
+      try {
+        for (const edge of edgesToDelete) {
+          if (edge.data?.connectionId) {
+            await deleteConnection(edge.data.connectionId);
+          }
+        }
+        loadConnections();
+      } catch (error) {
+        console.error('Failed to delete connections:', error);
+      }
+    },
+    [loadConnections]
   );
 
   if (!project) {
@@ -310,6 +378,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
           onNodeDragStop={onNodeDragStop}
           fitView
