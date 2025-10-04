@@ -57,11 +57,13 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
       <Handle
         type="target"
         position={Position.Left}
+        className="task-handle-left"
         style={{
           background: '#3b82f6',
           width: 10,
           height: 10,
           border: '2px solid #ffffff',
+          zIndex: 10,
         }}
       />
       
@@ -95,11 +97,13 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
       <Handle
         type="source"
         position={Position.Right}
+        className="task-handle-right"
         style={{
           background: '#3b82f6',
           width: 10,
           height: 10,
           border: '2px solid #ffffff',
+          zIndex: 10,
         }}
       />
     </div>

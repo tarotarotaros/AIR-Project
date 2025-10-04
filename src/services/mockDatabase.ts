@@ -1,11 +1,13 @@
-import { Project, Task } from "../types";
+import { Project, Task, Deliverable } from "../types";
 
 // Mock database using localStorage
 const PROJECTS_KEY = 'pm_projects';
 const TASKS_KEY = 'pm_tasks';
+const DELIVERABLES_KEY = 'pm_deliverables';
 
 let projectIdCounter = 1;
 let taskIdCounter = 1;
+let deliverableIdCounter = 1;
 
 // Helper functions
 function saveToStorage(key: string, data: any) {
@@ -25,12 +27,16 @@ function getCurrentTimestamp() {
 function initializeCounters() {
   const projects: Project[] = loadFromStorage(PROJECTS_KEY);
   const tasks: Task[] = loadFromStorage(TASKS_KEY);
+  const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
   
   if (projects.length > 0) {
     projectIdCounter = Math.max(...projects.map(p => p.id)) + 1;
   }
   if (tasks.length > 0) {
     taskIdCounter = Math.max(...tasks.map(t => t.id)) + 1;
+  }
+  if (deliverables.length > 0) {
+    deliverableIdCounter = Math.max(...deliverables.map(d => d.id)) + 1;
   }
 }
 
@@ -89,6 +95,11 @@ export async function deleteProject(id: number): Promise<void> {
   const tasks: Task[] = loadFromStorage(TASKS_KEY);
   const filteredTasks = tasks.filter(t => t.project_id !== id);
   saveToStorage(TASKS_KEY, filteredTasks);
+  
+  // Delete all deliverables for this project
+  const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
+  const filteredDeliverables = deliverables.filter(d => d.project_id !== id);
+  saveToStorage(DELIVERABLES_KEY, filteredDeliverables);
   
   // Delete project
   const projects: Project[] = loadFromStorage(PROJECTS_KEY);
@@ -180,5 +191,90 @@ export async function updateTaskPosition(id: number, x: number, y: number): Prom
       updated_at: getCurrentTimestamp(),
     };
     saveToStorage(TASKS_KEY, tasks);
+  }
+}
+
+// Deliverable CRUD operations
+export async function getDeliverables(projectId: number): Promise<Deliverable[]> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
+  return deliverables.filter(d => d.project_id === projectId);
+}
+
+export async function createDeliverable(
+  projectId: number,
+  name: string,
+  description?: string,
+  type: Deliverable['type'] = 'other',
+  due_date?: string
+): Promise<Deliverable> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const newDeliverable: Deliverable = {
+    id: deliverableIdCounter++,
+    project_id: projectId,
+    name,
+    description: description || '',
+    status: 'not_ready',
+    type,
+    due_date,
+    position_x: 100 + Math.random() * 200,
+    position_y: 200 + Math.random() * 200,
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  const deliverables = loadFromStorage(DELIVERABLES_KEY);
+  deliverables.push(newDeliverable);
+  saveToStorage(DELIVERABLES_KEY, deliverables);
+  
+  return newDeliverable;
+}
+
+export async function updateDeliverable(
+  id: number,
+  updates: Partial<Deliverable>
+): Promise<Deliverable> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
+  const deliverableIndex = deliverables.findIndex(d => d.id === id);
+  
+  if (deliverableIndex === -1) {
+    throw new Error('Deliverable not found');
+  }
+  
+  deliverables[deliverableIndex] = {
+    ...deliverables[deliverableIndex],
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  saveToStorage(DELIVERABLES_KEY, deliverables);
+  return deliverables[deliverableIndex];
+}
+
+export async function deleteDeliverable(id: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
+  const filteredDeliverables = deliverables.filter(d => d.id !== id);
+  saveToStorage(DELIVERABLES_KEY, filteredDeliverables);
+}
+
+export async function updateDeliverablePosition(id: number, x: number, y: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
+  const deliverableIndex = deliverables.findIndex(d => d.id === id);
+  
+  if (deliverableIndex !== -1) {
+    deliverables[deliverableIndex] = {
+      ...deliverables[deliverableIndex],
+      position_x: x,
+      position_y: y,
+      updated_at: getCurrentTimestamp(),
+    };
+    saveToStorage(DELIVERABLES_KEY, deliverables);
   }
 }

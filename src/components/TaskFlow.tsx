@@ -12,10 +12,15 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Task, Project } from '../types';
-import { getTasks, createTask, updateTask, updateTaskPosition, deleteTask } from '../services/mockDatabase';
+import { Task, Project, Deliverable } from '../types';
+import { 
+  getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
+  getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable 
+} from '../services/mockDatabase';
 import TaskModal from './TaskModal';
+import DeliverableModal from './DeliverableModal';
 import CustomTaskNode from './CustomTaskNode';
+import CustomDeliverableNode from './CustomDeliverableNode';
 
 interface TaskFlowProps {
   project: Project | null;
@@ -44,30 +49,44 @@ const getPriorityBorder = (priority: Task['priority']) => {
 // カスタムノードタイプの定義
 const nodeTypes = {
   customTask: CustomTaskNode,
+  customDeliverable: CustomDeliverableNode,
 };
 
 export default function TaskFlow({ project }: TaskFlowProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  
+  // Task modal state
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
+  // Deliverable modal state
+  const [isDeliverableModalOpen, setIsDeliverableModalOpen] = useState(false);
+  const [deliverableModalMode, setDeliverableModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedDeliverable, setSelectedDeliverable] = useState<Deliverable | null>(null);
 
   useEffect(() => {
     if (project) {
       loadTasks();
+      loadDeliverables();
     } else {
       setTasks([]);
+      setDeliverables([]);
       setNodes([]);
       setEdges([]);
     }
   }, [project]);
 
   useEffect(() => {
-    if (tasks.length > 0) {
-      const taskNodes: Node[] = tasks.map((task, index) => ({
-        id: task.id.toString(),
+    const allNodes: Node[] = [];
+    
+    // タスクノードを追加
+    tasks.forEach((task, index) => {
+      allNodes.push({
+        id: `task-${task.id}`,
         type: 'customTask',
         position: { 
           x: task.position_x || (150 + index * 250), 
@@ -77,10 +96,27 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           task,
           onEdit: handleEditTask,
         },
-      }));
-      setNodes(taskNodes);
-    }
-  }, [tasks, setNodes]);
+      });
+    });
+    
+    // 成果物ノードを追加
+    deliverables.forEach((deliverable, index) => {
+      allNodes.push({
+        id: `deliverable-${deliverable.id}`,
+        type: 'customDeliverable',
+        position: { 
+          x: deliverable.position_x || (150 + index * 250), 
+          y: deliverable.position_y || 300 
+        },
+        data: {
+          deliverable,
+          onEdit: handleEditDeliverable,
+        },
+      });
+    });
+    
+    setNodes(allNodes);
+  }, [tasks, deliverables, setNodes]);
 
   const getStatusLabel = (status: Task['status']) => {
     switch (status) {
@@ -113,23 +149,35 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     }
   };
 
+  const loadDeliverables = async () => {
+    if (!project) return;
+    
+    try {
+      const deliverablesData = await getDeliverables(project.id);
+      setDeliverables(deliverablesData);
+    } catch (error) {
+      console.error('Failed to load deliverables:', error);
+    }
+  };
+
+  // Task handlers
   const handleCreateTask = () => {
-    setModalMode('create');
+    setTaskModalMode('create');
     setSelectedTask(null);
-    setIsModalOpen(true);
+    setIsTaskModalOpen(true);
   };
 
   const handleEditTask = (task: Task) => {
-    setModalMode('edit');
+    setTaskModalMode('edit');
     setSelectedTask(task);
-    setIsModalOpen(true);
+    setIsTaskModalOpen(true);
   };
 
   const handleSaveTask = async (taskData: Partial<Task>) => {
     if (!project) return;
 
     try {
-      if (modalMode === 'create') {
+      if (taskModalMode === 'create') {
         const newTask = await createTask(
           project.id,
           taskData.name!,
@@ -138,7 +186,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           taskData.priority
         );
         setTasks([...tasks, newTask]);
-      } else if (modalMode === 'edit' && selectedTask) {
+      } else if (taskModalMode === 'edit' && selectedTask) {
         const updatedTask = await updateTask(selectedTask.id, taskData);
         setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
       }
@@ -147,11 +195,52 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     }
   };
 
+  // Deliverable handlers
+  const handleCreateDeliverable = () => {
+    setDeliverableModalMode('create');
+    setSelectedDeliverable(null);
+    setIsDeliverableModalOpen(true);
+  };
+
+  const handleEditDeliverable = (deliverable: Deliverable) => {
+    setDeliverableModalMode('edit');
+    setSelectedDeliverable(deliverable);
+    setIsDeliverableModalOpen(true);
+  };
+
+  const handleSaveDeliverable = async (deliverableData: Partial<Deliverable>) => {
+    if (!project) return;
+
+    try {
+      if (deliverableModalMode === 'create') {
+        const newDeliverable = await createDeliverable(
+          project.id,
+          deliverableData.name!,
+          deliverableData.description,
+          deliverableData.type,
+          deliverableData.due_date
+        );
+        setDeliverables([...deliverables, newDeliverable]);
+      } else if (deliverableModalMode === 'edit' && selectedDeliverable) {
+        const updatedDeliverable = await updateDeliverable(selectedDeliverable.id, deliverableData);
+        setDeliverables(deliverables.map(d => d.id === selectedDeliverable.id ? updatedDeliverable : d));
+      }
+    } catch (error) {
+      console.error('Failed to save deliverable:', error);
+    }
+  };
+
   const onNodeDragStop = useCallback(async (event: any, node: Node) => {
     try {
-      await updateTaskPosition(parseInt(node.id), node.position.x, node.position.y);
+      if (node.id.startsWith('task-')) {
+        const taskId = parseInt(node.id.replace('task-', ''));
+        await updateTaskPosition(taskId, node.position.x, node.position.y);
+      } else if (node.id.startsWith('deliverable-')) {
+        const deliverableId = parseInt(node.id.replace('deliverable-', ''));
+        await updateDeliverablePosition(deliverableId, node.position.x, node.position.y);
+      }
     } catch (error) {
-      console.error('Failed to update task position:', error);
+      console.error('Failed to update position:', error);
     }
   }, []);
 
@@ -186,8 +275,11 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   return (
     <div className="task-flow">
       <div className="task-flow-header">
-        <h2>{project.name} - タスクフロー</h2>
-        <button onClick={handleCreateTask}>タスク追加</button>
+        <h2>{project.name} - タスク・成果物フロー</h2>
+        <div className="flow-actions">
+          <button onClick={handleCreateTask} className="btn-primary">タスク追加</button>
+          <button onClick={handleCreateDeliverable} className="btn-secondary">成果物追加</button>
+        </div>
       </div>
 
       <div className="react-flow-container" style={{ height: '500px' }}>
@@ -220,11 +312,19 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       </div>
 
       <TaskModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
         onSave={handleSaveTask}
         task={selectedTask}
-        mode={modalMode}
+        mode={taskModalMode}
+      />
+
+      <DeliverableModal
+        isOpen={isDeliverableModalOpen}
+        onClose={() => setIsDeliverableModalOpen(false)}
+        onSave={handleSaveDeliverable}
+        deliverable={selectedDeliverable}
+        mode={deliverableModalMode}
       />
     </div>
   );

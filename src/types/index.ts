@@ -21,3 +21,26 @@ export interface Task {
   created_at: string;
   updated_at: string;
 }
+
+export interface Deliverable {
+  id: number;
+  project_id: number;
+  name: string;
+  description?: string;
+  status: 'not_ready' | 'ready' | 'completed';
+  type: 'document' | 'software' | 'design' | 'data' | 'other';
+  due_date?: string;
+  position_x: number;
+  position_y: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type NodeType = 'task' | 'deliverable';
+
+export interface FlowNode {
+  id: string;
+  type: NodeType;
+  data: Task | Deliverable;
+  position: { x: number; y: number };
+}
