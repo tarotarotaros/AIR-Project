@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Project } from "./types";
 import ProjectList from "./components/ProjectList";
-import TaskFlow from "./components/TaskFlow";
+import ProjectTabs from "./components/ProjectTabs";
 
 function App() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -21,7 +21,7 @@ function App() {
         </aside>
         
         <main className="main-content">
-          <TaskFlow project={selectedProject} />
+          <ProjectTabs project={selectedProject} />
         </main>
       </div>
     </div>

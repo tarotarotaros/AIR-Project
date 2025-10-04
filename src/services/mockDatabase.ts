@@ -1,15 +1,21 @@
-import { Project, Task, Deliverable, FlowConnection } from "../types";
+import { Project, Task, Deliverable, FlowConnection, StatusMaster, AssigneeMaster, DeliverableTypeMaster } from "../types";
 
 // Mock database using localStorage
 const PROJECTS_KEY = 'pm_projects';
 const TASKS_KEY = 'pm_tasks';
 const DELIVERABLES_KEY = 'pm_deliverables';
 const CONNECTIONS_KEY = 'pm_connections';
+const STATUS_MASTERS_KEY = 'pm_status_masters';
+const ASSIGNEE_MASTERS_KEY = 'pm_assignee_masters';
+const DELIVERABLE_TYPE_MASTERS_KEY = 'pm_deliverable_type_masters';
 
 let projectIdCounter = 1;
 let taskIdCounter = 1;
 let deliverableIdCounter = 1;
 let connectionIdCounter = 1;
+let statusMasterIdCounter = 1;
+let assigneeMasterIdCounter = 1;
+let deliverableTypeMasterIdCounter = 1;
 
 // Helper functions
 function saveToStorage(key: string, data: any) {
@@ -352,4 +358,204 @@ export async function deleteConnectionsByNodeId(
       (c.target_type === nodeType && c.target_id === nodeId))
   );
   saveToStorage(CONNECTIONS_KEY, filteredConnections);
+}
+
+// Master management CRUD operations
+
+// Status Master
+export async function getStatusMasters(): Promise<StatusMaster[]> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const masters = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
+  if (masters.length === 0) {
+    const defaultMasters = getDefaultStatusMasters();
+    saveToStorage(STATUS_MASTERS_KEY, defaultMasters);
+    return defaultMasters;
+  }
+  return masters;
+}
+
+export async function createStatusMaster(name: string, type: 'task' | 'deliverable', color: string): Promise<StatusMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY);
+  const maxOrder = Math.max(...masters.map(m => m.order), 0);
+  
+  const newMaster: StatusMaster = {
+    id: statusMasterIdCounter++,
+    name,
+    type,
+    color,
+    order: maxOrder + 1,
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  masters.push(newMaster);
+  saveToStorage(STATUS_MASTERS_KEY, masters);
+  return newMaster;
+}
+
+export async function updateStatusMaster(id: number, updates: Partial<StatusMaster>): Promise<StatusMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY);
+  const index = masters.findIndex(m => m.id === id);
+  
+  if (index === -1) {
+    throw new Error('Status master not found');
+  }
+  
+  masters[index] = {
+    ...masters[index],
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  saveToStorage(STATUS_MASTERS_KEY, masters);
+  return masters[index];
+}
+
+export async function deleteStatusMaster(id: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY);
+  const filtered = masters.filter(m => m.id !== id);
+  saveToStorage(STATUS_MASTERS_KEY, filtered);
+}
+
+// Assignee Master
+export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  return loadFromStorage(ASSIGNEE_MASTERS_KEY);
+}
+
+export async function createAssigneeMaster(name: string, email?: string, role?: string): Promise<AssigneeMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+  
+  const newMaster: AssigneeMaster = {
+    id: assigneeMasterIdCounter++,
+    name,
+    email,
+    role,
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  masters.push(newMaster);
+  saveToStorage(ASSIGNEE_MASTERS_KEY, masters);
+  return newMaster;
+}
+
+export async function updateAssigneeMaster(id: number, updates: Partial<AssigneeMaster>): Promise<AssigneeMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+  const index = masters.findIndex(m => m.id === id);
+  
+  if (index === -1) {
+    throw new Error('Assignee master not found');
+  }
+  
+  masters[index] = {
+    ...masters[index],
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  saveToStorage(ASSIGNEE_MASTERS_KEY, masters);
+  return masters[index];
+}
+
+export async function deleteAssigneeMaster(id: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+  const filtered = masters.filter(m => m.id !== id);
+  saveToStorage(ASSIGNEE_MASTERS_KEY, filtered);
+}
+
+// Deliverable Type Master
+export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster[]> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const masters = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY, getDefaultDeliverableTypeMasters());
+  if (masters.length === 0) {
+    const defaultMasters = getDefaultDeliverableTypeMasters();
+    saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, defaultMasters);
+    return defaultMasters;
+  }
+  return masters;
+}
+
+export async function createDeliverableTypeMaster(name: string, icon: string, color: string): Promise<DeliverableTypeMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+  const maxOrder = Math.max(...masters.map(m => m.order), 0);
+  
+  const newMaster: DeliverableTypeMaster = {
+    id: deliverableTypeMasterIdCounter++,
+    name,
+    icon,
+    color,
+    order: maxOrder + 1,
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  masters.push(newMaster);
+  saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, masters);
+  return newMaster;
+}
+
+export async function updateDeliverableTypeMaster(id: number, updates: Partial<DeliverableTypeMaster>): Promise<DeliverableTypeMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+  const index = masters.findIndex(m => m.id === id);
+  
+  if (index === -1) {
+    throw new Error('Deliverable type master not found');
+  }
+  
+  masters[index] = {
+    ...masters[index],
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  };
+  
+  saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, masters);
+  return masters[index];
+}
+
+export async function deleteDeliverableTypeMaster(id: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+  const filtered = masters.filter(m => m.id !== id);
+  saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, filtered);
+}
+
+// Default data
+function getDefaultStatusMasters(): StatusMaster[] {
+  return [
+    { id: 1, name: '未開始', type: 'task', color: '#f3f4f6', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 2, name: '進行中', type: 'task', color: '#fef3c7', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 3, name: '完了', type: 'task', color: '#d1fae5', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 4, name: 'ブロック', type: 'task', color: '#fee2e2', order: 4, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 5, name: '準備中', type: 'deliverable', color: '#fef3c7', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 6, name: '準備完了', type: 'deliverable', color: '#dbeafe', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 7, name: '完成', type: 'deliverable', color: '#d1fae5', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+  ];
+}
+
+function getDefaultDeliverableTypeMasters(): DeliverableTypeMaster[] {
+  return [
+    { id: 1, name: 'ドキュメント', icon: '📄', color: '#3b82f6', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 2, name: 'ソフトウェア', icon: '💻', color: '#10b981', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 3, name: '設計書', icon: '🎨', color: '#8b5cf6', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 4, name: 'データ', icon: '📊', color: '#f59e0b', order: 4, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 5, name: 'その他', icon: '📦', color: '#6b7280', order: 5, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+  ];
 }

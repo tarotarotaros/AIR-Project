@@ -55,3 +55,36 @@ export interface FlowConnection {
   created_at: string;
   updated_at: string;
 }
+
+// マスタ管理用の型定義
+export interface StatusMaster {
+  id: number;
+  name: string;
+  type: 'task' | 'deliverable';
+  color: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssigneeMaster {
+  id: number;
+  name: string;
+  email?: string;
+  role?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DeliverableTypeMaster {
+  id: number;
+  name: string;
+  icon: string;
+  color: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// タブの種類
+export type TabType = 'flow' | 'tasks' | 'deliverables' | 'masters';
