@@ -1,11 +1,11 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { Task } from '../types';
 
 interface TaskNodeData {
-  label: string;
   task: Task;
   onEdit: (task: Task) => void;
+  onDelete: (task: Task) => void;
 }
 
 const getStatusColor = (status: Task['status']) => {
@@ -49,7 +49,8 @@ const getPriorityLabel = (priority: Task['priority']) => {
 };
 
 function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
-  const { task, onEdit } = data;
+  const { task, onEdit, onDelete } = data;
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div className="custom-task-node">
@@ -79,7 +80,44 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
           position: 'relative',
         }}
         onClick={() => onEdit(task)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
+        {/* ホバー時に表示される削除ボタン */}
+        {isHovered && (
+          <button
+            style={{
+              position: 'absolute',
+              top: '-8px',
+              right: '-8px',
+              width: '16px',
+              height: '16px',
+              borderRadius: '8px',
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: '1px solid white',
+              fontSize: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 30,
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(task);
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor = '#dc2626';
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor = '#ef4444';
+            }}
+          >
+            ×
+          </button>
+        )}
         <div style={{ fontWeight: 'bold', fontSize: '13px', marginBottom: '4px' }}>
           {task.name}
         </div>

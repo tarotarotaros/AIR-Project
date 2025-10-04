@@ -95,6 +95,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
         data: {
           task,
           onEdit: handleEditTask,
+          onDelete: handleDeleteTask,
         },
       });
     });
@@ -111,6 +112,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
         data: {
           deliverable,
           onEdit: handleEditDeliverable,
+          onDelete: handleDeleteDeliverable,
         },
       });
     });
@@ -227,6 +229,25 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       }
     } catch (error) {
       console.error('Failed to save deliverable:', error);
+    }
+  };
+
+  // Delete handlers
+  const handleDeleteTask = async (task: Task) => {
+    try {
+      await deleteTask(task.id);
+      setTasks(tasks.filter(t => t.id !== task.id));
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
+  };
+
+  const handleDeleteDeliverable = async (deliverable: Deliverable) => {
+    try {
+      await deleteDeliverable(deliverable.id);
+      setDeliverables(deliverables.filter(d => d.id !== deliverable.id));
+    } catch (error) {
+      console.error('Failed to delete deliverable:', error);
     }
   };
 
