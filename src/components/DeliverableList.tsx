@@ -156,7 +156,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
           className="btn-icon-round"
           title="成果物追加"
         >
-          <MdAdd size={28} />
+          <MdAdd size={36} />
         </button>
 
         <div className="search-box">

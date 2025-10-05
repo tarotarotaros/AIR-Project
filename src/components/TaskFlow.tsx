@@ -12,8 +12,9 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { MdList, MdInventory } from 'react-icons/md';
 import { Task, Project, Deliverable, FlowConnection } from '../types';
-import { 
+import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
   getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable,
   getConnections, createConnection, deleteConnection, deleteConnectionsByNodeId
@@ -374,8 +375,14 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   return (
     <div className="task-flow">
       <div className="flow-controls">
-        <button onClick={handleCreateTask} className="btn-primary">タスク追加</button>
-        <button onClick={handleCreateDeliverable} className="btn-secondary">成果物追加</button>
+        <button onClick={handleCreateTask} className="btn-primary">
+          <MdList size={20} />
+          タスク追加
+        </button>
+        <button onClick={handleCreateDeliverable} className="btn-secondary">
+          <MdInventory size={20} />
+          成果物追加
+        </button>
       </div>
 
       <div className="react-flow-container" style={{ height: '500px' }}>

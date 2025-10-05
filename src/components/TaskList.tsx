@@ -145,7 +145,7 @@ export default function TaskList({ project }: TaskListProps) {
           className="btn-icon-round"
           title="タスク追加"
         >
-          <MdAdd size={28} />
+          <MdAdd size={36} />
         </button>
 
         <div className="search-box">
