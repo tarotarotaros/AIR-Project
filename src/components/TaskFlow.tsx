@@ -361,6 +361,36 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     [loadConnections]
   );
 
+  const onNodesDelete = useCallback(
+    async (nodesToDelete: Node[]) => {
+      try {
+        for (const node of nodesToDelete) {
+          if (node.id.startsWith('task-')) {
+            const taskId = parseInt(node.id.replace('task-', ''));
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+              await deleteTask(taskId);
+              await deleteConnectionsByNodeId('task', taskId);
+            }
+          } else if (node.id.startsWith('deliverable-')) {
+            const deliverableId = parseInt(node.id.replace('deliverable-', ''));
+            const deliverable = deliverables.find(d => d.id === deliverableId);
+            if (deliverable) {
+              await deleteDeliverable(deliverableId);
+              await deleteConnectionsByNodeId('deliverable', deliverableId);
+            }
+          }
+        }
+        loadTasks();
+        loadDeliverables();
+        loadConnections();
+      } catch (error) {
+        console.error('Failed to delete nodes:', error);
+      }
+    },
+    [tasks, deliverables]
+  );
+
   if (!project) {
     return (
       <div className="task-flow-empty">
@@ -430,6 +460,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
           onNodeDragStop={onNodeDragStop}
@@ -438,6 +469,12 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           connectionMode="strict"
           edgesFocusable={true}
           elementsSelectable={true}
+          selectionOnDrag={true}
+          panOnDrag={true}
+          selectionMode="partial"
+          selectionKeyCode="Shift"
+          multiSelectionKeyCode="Shift"
+          deleteKeyCode="Delete"
           connectionLineStyle={{ strokeWidth: 2, stroke: '#2563eb' }}
         >
           <Controls />
