@@ -3,7 +3,9 @@ import { Project, Task, Deliverable, FlowConnection, StatusMaster, AssigneeMaste
 
 // 環境判定
 const isTauriApp = () => {
-  return typeof window !== 'undefined' && (window as any).__TAURI__;
+  // 一時的にTauri環境でもmockDatabaseを使用
+  return false;
+  // return typeof window !== 'undefined' && (window as any).__TAURI__;
 };
 
 // プロジェクト関連

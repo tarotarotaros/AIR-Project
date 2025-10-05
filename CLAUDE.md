@@ -1,5 +1,25 @@
 # Tauriプロジェクト管理アプリ - Claude Code設定
 
+## Claude Code動作設定
+
+### レスポンス完了時の通知
+Claude Codeが各レスポンスを完了したら、以下のPowerShellコマンドで通知を送信してください：
+
+```powershell
+New-BurntToastNotification -Text "Claude Code", "Waiting for your response." -Sound Mail
+```
+
+この通知により、ユーザーに応答待ちを知らせます。
+
+### Rust/Cargo PATH設定
+Claude CodeのBashセッションでRust/Cargoを使用する際は、以下のコマンドでPATHを設定してください：
+
+```bash
+export PATH="$PATH:/c/Users/yamamura/.cargo/bin"
+```
+
+Tauri関連のコマンド（`npm run tauri:*`）を実行する前に、必ずこのPATH設定を行ってください。
+
 ## プロジェクト概要
 Tauriを使用したデスクトップ型プロジェクト管理アプリケーション。プロセスフローダイアグラムによるタスク管理可視化機能を搭載。MS ProjectやNotionのような操作感で、個人利用向けにSQLiteローカルストレージを採用。
 

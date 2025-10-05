@@ -57,8 +57,11 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
     <div className="project-list">
       <div className="project-header">
         <h2>プロジェクト</h2>
-        <button 
-          onClick={() => setIsCreating(true)} 
+        <button
+          onClick={() => {
+            console.log('プロジェクト作成ボタンがクリックされました');
+            setIsCreating(true);
+          }}
           className="btn-icon"
           title="新規プロジェクト作成"
         >
