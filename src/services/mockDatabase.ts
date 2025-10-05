@@ -133,8 +133,8 @@ export async function createTask(
   const newTask: Task = {
     id: taskIdCounter++,
     ...task,
-    position_x: task.position_x || (100 + Math.random() * 200),
-    position_y: task.position_y || (100 + Math.random() * 200),
+    position_x: task.position_x ?? null,
+    position_y: task.position_y ?? null,
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };
@@ -209,8 +209,8 @@ export async function createDeliverable(
   const newDeliverable: Deliverable = {
     id: deliverableIdCounter++,
     ...deliverable,
-    position_x: deliverable.position_x || (100 + Math.random() * 200),
-    position_y: deliverable.position_y || (200 + Math.random() * 200),
+    position_x: deliverable.position_x ?? null,
+    position_y: deliverable.position_y ?? null,
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };

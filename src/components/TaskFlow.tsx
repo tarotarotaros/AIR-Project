@@ -13,7 +13,8 @@ import ReactFlow, {
 } from 'reactflow';
 import { toPng } from 'html-to-image';
 import 'reactflow/dist/style.css';
-import { MdList, MdInventory, MdFileDownload, MdFileUpload, MdPictureAsPdf, MdCheckCircle, MdError, MdHourglassEmpty } from 'react-icons/md';
+import { MdList, MdInventory, MdFileDownload, MdFileUpload, MdPictureAsPdf, MdCheckCircle, MdError, MdHourglassEmpty, MdAutoAwesome } from 'react-icons/md';
+import dagre from 'dagre';
 import { Task, Project, Deliverable, FlowConnection } from '../types';
 import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
@@ -105,49 +106,73 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     console.log('Tasks:', tasks);
     console.log('Deliverables:', deliverables);
 
-    const allNodes: Node[] = [];
+    setNodes((currentNodes) => {
+      const allNodes: Node[] = [];
 
-    // タスクノードを追加
-    tasks.forEach((task, index) => {
-      allNodes.push({
-        id: `task-${task.id}`,
-        type: 'customTask',
-        position: {
-          x: task.position_x || (150 + index * 250),
-          y: task.position_y || 100
-        },
-        data: {
-          task,
-          onEdit: handleEditTask,
-          onDelete: handleDeleteTask,
-        },
-        connectable: true,
-        draggable: true,
+      // 現在のノード位置をマップに保存
+      const currentPositions = new Map<string, { x: number; y: number }>();
+      currentNodes.forEach(node => {
+        currentPositions.set(node.id, node.position);
       });
-    });
 
-    // 成果物ノードを追加
-    deliverables.forEach((deliverable, index) => {
-      allNodes.push({
-        id: `deliverable-${deliverable.id}`,
-        type: 'customDeliverable',
-        position: {
-          x: deliverable.position_x || (150 + index * 250),
-          y: deliverable.position_y || 300
-        },
-        data: {
-          deliverable,
-          onEdit: handleEditDeliverable,
-          onDelete: handleDeleteDeliverable,
-        },
-        connectable: true,
-        draggable: true,
+      // タスクノードを追加
+      tasks.forEach((task, index) => {
+        const nodeId = `task-${task.id}`;
+        // 既存ノードの位置を優先、なければデータベースの位置、それもなければ自動配置
+        let position;
+        if (currentPositions.has(nodeId)) {
+          position = currentPositions.get(nodeId)!;
+        } else if (task.position_x !== null && task.position_x !== undefined) {
+          position = { x: task.position_x, y: task.position_y! };
+        } else {
+          position = { x: 150 + allNodes.filter(n => n.type === 'customTask').length * 250, y: 100 };
+        }
+
+        allNodes.push({
+          id: nodeId,
+          type: 'customTask',
+          position,
+          data: {
+            task,
+            onEdit: handleEditTask,
+            onDelete: handleDeleteTask,
+          },
+          connectable: true,
+          draggable: true,
+        });
       });
-    });
 
-    console.log('Generated nodes:', allNodes.length);
-    setNodes(allNodes);
-  }, [tasks, deliverables, setNodes]);
+      // 成果物ノードを追加
+      deliverables.forEach((deliverable, index) => {
+        const nodeId = `deliverable-${deliverable.id}`;
+        // 既存ノードの位置を優先、なければデータベースの位置、それもなければ自動配置
+        let position;
+        if (currentPositions.has(nodeId)) {
+          position = currentPositions.get(nodeId)!;
+        } else if (deliverable.position_x !== null && deliverable.position_x !== undefined) {
+          position = { x: deliverable.position_x, y: deliverable.position_y! };
+        } else {
+          position = { x: 150 + allNodes.filter(n => n.type === 'customDeliverable').length * 250, y: 300 };
+        }
+
+        allNodes.push({
+          id: nodeId,
+          type: 'customDeliverable',
+          position,
+          data: {
+            deliverable,
+            onEdit: handleEditDeliverable,
+            onDelete: handleDeleteDeliverable,
+          },
+          connectable: true,
+          draggable: true,
+        });
+      });
+
+      console.log('Generated nodes:', allNodes.length);
+      return allNodes;
+    });
+  }, [tasks, deliverables]);
 
   useEffect(() => {
     // 接続データからReact Flowのエッジを生成
@@ -636,6 +661,66 @@ ${JSON.stringify(exportData, null, 2)}
     input.click();
   };
 
+  const handleAutoLayout = async () => {
+    if (!project) return;
+
+    try {
+      // dagreグラフの作成
+      const dagreGraph = new dagre.graphlib.Graph();
+      dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+      // 左から右へのレイアウト（横方向）
+      dagreGraph.setGraph({ rankdir: 'LR', nodesep: 100, ranksep: 150 });
+
+      // ノードの幅と高さを設定
+      const nodeWidth = 200;
+      const nodeHeight = 100;
+
+      // ノードを登録
+      nodes.forEach((node) => {
+        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+      });
+
+      // エッジを登録
+      edges.forEach((edge) => {
+        dagreGraph.setEdge(edge.source, edge.target);
+      });
+
+      // レイアウト計算
+      dagre.layout(dagreGraph);
+
+      // 計算された位置を適用
+      const layoutedNodes = nodes.map((node) => {
+        const nodeWithPosition = dagreGraph.node(node.id);
+        return {
+          ...node,
+          position: {
+            x: nodeWithPosition.x - nodeWidth / 2,
+            y: nodeWithPosition.y - nodeHeight / 2,
+          },
+        };
+      });
+
+      // 画面に反映
+      setNodes(layoutedNodes);
+
+      // データベースに保存
+      for (const node of layoutedNodes) {
+        const nodeData = node.data;
+        if (node.type === 'customTask') {
+          await updateTaskPosition(parseInt(node.id.replace('task-', '')), node.position.x, node.position.y);
+        } else if (node.type === 'customDeliverable') {
+          await updateDeliverablePosition(parseInt(node.id.replace('deliverable-', '')), node.position.x, node.position.y);
+        }
+      }
+
+      console.log('Auto layout completed');
+    } catch (error) {
+      console.error('Auto layout error:', error);
+      alert('自動整列に失敗しました。');
+    }
+  };
+
   const handlePDFExport = async (settings: PDFExportSettings) => {
     if (!project) return;
 
@@ -769,6 +854,10 @@ ${JSON.stringify(exportData, null, 2)}
         <button onClick={handleCreateDeliverable} className="btn-secondary">
           <MdInventory size={20} />
           成果物追加
+        </button>
+        <button onClick={handleAutoLayout} className="btn-secondary">
+          <MdAutoAwesome size={20} />
+          自動整列
         </button>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
           <button onClick={handleImport} className="btn-secondary">
