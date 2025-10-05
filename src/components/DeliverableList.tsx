@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MdEdit, MdDelete, MdViewModule, MdViewList, MdDescription, MdComputer, MdDesignServices, MdBarChart, MdInventory } from 'react-icons/md';
+import { MdEdit, MdDelete, MdViewModule, MdViewList, MdDescription, MdComputer, MdDesignServices, MdBarChart, MdInventory, MdAdd } from 'react-icons/md';
 import { Project, Deliverable } from '../types';
 import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable } from '../services/databaseAdapter';
 import DeliverableModal from './DeliverableModal';
@@ -150,14 +150,15 @@ export default function DeliverableList({ project }: DeliverableListProps) {
 
   return (
     <div className="deliverable-list">
-      <div className="deliverable-list-header">
-        <h3>成果物一覧</h3>
-        <button onClick={handleCreateDeliverable} className="btn-primary">
-          成果物追加
-        </button>
-      </div>
-
       <div className="deliverable-list-controls">
+        <button
+          onClick={handleCreateDeliverable}
+          className="btn-icon-round"
+          title="成果物追加"
+        >
+          <MdAdd size={28} />
+        </button>
+
         <div className="search-box">
           <input
             type="text"
@@ -166,7 +167,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <div className="filter-controls">
           <select
             value={filterStatus}
@@ -177,7 +178,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
             <option value="ready">準備完了</option>
             <option value="completed">完成</option>
           </select>
-          
+
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
@@ -189,7 +190,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
             <option value="data">データ</option>
             <option value="other">その他</option>
           </select>
-          
+
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}

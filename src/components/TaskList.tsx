@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MdEdit, MdDelete, MdViewModule, MdViewList } from 'react-icons/md';
+import { MdEdit, MdDelete, MdViewModule, MdViewList, MdAdd } from 'react-icons/md';
 import { Project, Task } from '../types';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
@@ -139,14 +139,15 @@ export default function TaskList({ project }: TaskListProps) {
 
   return (
     <div className="task-list">
-      <div className="task-list-header">
-        <h3>タスク一覧</h3>
-        <button onClick={handleCreateTask} className="btn-primary">
-          タスク追加
-        </button>
-      </div>
-
       <div className="task-list-controls">
+        <button
+          onClick={handleCreateTask}
+          className="btn-icon-round"
+          title="タスク追加"
+        >
+          <MdAdd size={28} />
+        </button>
+
         <div className="search-box">
           <input
             type="text"
@@ -155,7 +156,7 @@ export default function TaskList({ project }: TaskListProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <div className="filter-controls">
           <select
             value={filterStatus}
@@ -167,7 +168,7 @@ export default function TaskList({ project }: TaskListProps) {
             <option value="completed">完了</option>
             <option value="blocked">ブロック</option>
           </select>
-          
+
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}

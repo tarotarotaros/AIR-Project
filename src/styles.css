@@ -25,6 +25,30 @@ body {
   min-height: 100vh;
 }
 
+/* 共通ページヘッダースタイル */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.page-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .app {
   display: flex;
   flex-direction: column;
@@ -137,6 +161,25 @@ body {
 
 .project-header .btn-icon:hover {
   background-color: #2563eb;
+}
+
+/* 丸いアイコンボタン（タスク・成果物追加用） */
+.btn-icon-round {
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon-round:hover {
+  background-color: #2563eb;
   transform: scale(1.1);
 }
 
@@ -210,6 +253,14 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding: 0;
+}
+
+.flow-controls {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem;
+  align-items: center;
 }
 
 .task-flow-empty {
@@ -225,11 +276,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
 }
 
 .task-flow-header h2 {
-  font-size: 1.6rem;
+  margin: 0;
+  font-size: 1.5rem;
   color: #374151;
 }
 
@@ -251,6 +304,7 @@ body {
 
 .react-flow-container {
   flex: 1;
+  margin: 0 2rem 2rem 2rem;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   overflow: hidden;
@@ -645,17 +699,18 @@ button:active {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0;
 }
 
 .task-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
 }
 
-.task-list-header h3 {
+.task-list-header h2 {
   margin: 0;
   font-size: 1.5rem;
   color: #374151;
@@ -665,6 +720,7 @@ button:active {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding: 1.5rem 2rem;
   align-items: center;
 }
 
@@ -694,6 +750,7 @@ button:active {
 .task-list-content {
   flex: 1;
   overflow-y: auto;
+  padding: 0 2rem 2rem 2rem;
 }
 
 .task-grid {
@@ -803,17 +860,18 @@ button:active {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0;
 }
 
 .deliverable-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
 }
 
-.deliverable-list-header h3 {
+.deliverable-list-header h2 {
   margin: 0;
   font-size: 1.5rem;
   color: #374151;
@@ -823,12 +881,14 @@ button:active {
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding: 1.5rem 2rem;
   align-items: center;
 }
 
 .deliverable-list-content {
   flex: 1;
   overflow-y: auto;
+  padding: 0 2rem 2rem 2rem;
 }
 
 .deliverable-grid {
@@ -928,7 +988,7 @@ button:active {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 0;
 }
 
 .master-management-header {
@@ -945,6 +1005,7 @@ button:active {
   display: flex;
   gap: 0.25rem;
   margin-bottom: 1rem;
+  padding: 1.5rem 2rem 0 2rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -975,6 +1036,7 @@ button:active {
 
 .master-content {
   flex: 1;
+  padding: 0 2rem 2rem 2rem;
   overflow-y: auto;
 }
 
@@ -1322,26 +1384,26 @@ button:active {
 
 /* Project Settings Styles */
 .project-settings {
-  padding: 1rem;
-  max-width: 800px;
+  padding: 0;
 }
 
 .project-settings-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem 1rem 1rem;
   border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 1rem;
 }
 
-.project-settings-header h3 {
+.project-settings-header h2 {
   margin: 0;
-  font-size: 2rem;
-  color: #1f2937;
+  font-size: 1.5rem;
+  color: #374151;
 }
 
 .project-settings-content {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  padding: 1.5rem 2rem 2rem 2rem;
 }
 
 .settings-section {

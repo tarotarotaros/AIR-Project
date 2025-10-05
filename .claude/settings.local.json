@@ -1,18 +1,26 @@
 {
+  "environment": {
+    "PATH": "%PATH%;C:\\Users\\yamamura\\.cargo\\bin;C:\\Users\\yamamura\\.rustup\\toolchains\\stable-x86_64-pc-windows-msvc\\bin"
+  }
   "permissions": {
     "allow": [
-      "Bash(npm create:*)",
-      "Bash(npx create-tauri-app:*)",
-      "Bash(cargo install:*)",
-      "Bash(npm install)",
-      "Bash(npm install:*)",
-      "Bash(npm run tauri:*)",
-      "Bash(npm run dev:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(sed:*)"
+      "PowerShell(npm create:*)",
+      "PowerShell(npx create-tauri-app:*)",
+      "PowerShell(cargo install:*)",
+      "PowerShell(npm install)",
+      "PowerShell(npm install:*)",
+      "PowerShell(npm run tauri:*)",
+      "PowerShell(npm run dev:*)",
+      "PowerShell(git add:*)",
+      "PowerShell(git commit:*)",
+      "PowerShell(sed:*)",
+      "PowerShell(New-BurntToastNotification -Text \"Claude Code\", \"Waiting for your response.\" -Sound Mail)",
+      "PowerShell(rustc --version)",
+      "PowerShell(cargo --version)",
+      "PowerShell(cargo clean)",
+      "WebFetch(domain:github.com)"
     ],
-    "deny": [],
+    "deny": [ ]
     "ask": []
   }
 }

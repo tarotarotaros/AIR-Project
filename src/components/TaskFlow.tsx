@@ -373,12 +373,9 @@ export default function TaskFlow({ project }: TaskFlowProps) {
 
   return (
     <div className="task-flow">
-      <div className="task-flow-header">
-        <h2>{project.name} - タスク・成果物フロー</h2>
-        <div className="flow-actions">
-          <button onClick={handleCreateTask} className="btn-primary">タスク追加</button>
-          <button onClick={handleCreateDeliverable} className="btn-secondary">成果物追加</button>
-        </div>
+      <div className="flow-controls">
+        <button onClick={handleCreateTask} className="btn-primary">タスク追加</button>
+        <button onClick={handleCreateDeliverable} className="btn-secondary">成果物追加</button>
       </div>
 
       <div className="react-flow-container" style={{ height: '500px' }}>

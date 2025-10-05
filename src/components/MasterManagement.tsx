@@ -318,10 +318,6 @@ export default function MasterManagement() {
 
   return (
     <div className="master-management">
-      <div className="master-management-header">
-        <h3>マスタ管理</h3>
-      </div>
-
       <div className="master-tabs">
         {tabs.map((tab) => (
           <button

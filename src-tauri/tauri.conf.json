@@ -2,12 +2,12 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:1420",
+    "devPath": "http://localhost:3000",
     "distDir": "../dist",
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "project-manager",
+    "productName": "AIR-Project",
     "version": "0.0.0"
   },
   "tauri": {
@@ -19,16 +19,9 @@
       }
     },
     "bundle": {
-      "active": true,
+      "active": false,
       "targets": "all",
-      "identifier": "com.projectmanager.dev",
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
+      "identifier": "com.airproject.dev"
     },
     "security": {
       "csp": null
@@ -37,7 +30,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "Project Manager",
+        "title": "AIR-Project",
         "width": 1200,
         "height": 800,
         "minWidth": 800,

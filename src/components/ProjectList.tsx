@@ -65,7 +65,7 @@ export default function ProjectList({ onSelectProject, selectedProject }: Projec
           className="btn-icon"
           title="新規プロジェクト作成"
         >
-          <MdAdd size={24} />
+          <MdAdd size={28} />
         </button>
       </div>
 

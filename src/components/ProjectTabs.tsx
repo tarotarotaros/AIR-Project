@@ -25,11 +25,11 @@ export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete 
   }
 
   const tabs = [
-    { id: 'flow' as TabType, label: 'フロー図', icon: MdAccountTree },
-    { id: 'tasks' as TabType, label: 'タスク一覧', icon: MdList },
-    { id: 'deliverables' as TabType, label: '成果物一覧', icon: MdInventory },
-    { id: 'masters' as TabType, label: 'マスタ管理', icon: MdSettings },
-    { id: 'settings' as TabType, label: 'プロジェクト設定', icon: MdManageAccounts },
+    { id: 'flow' as TabType, label: 'プロセスフロー', icon: MdAccountTree },
+    { id: 'tasks' as TabType, label: 'タスク', icon: MdList },
+    { id: 'deliverables' as TabType, label: '成果物', icon: MdInventory },
+    { id: 'masters' as TabType, label: 'マスタ', icon: MdSettings },
+    { id: 'settings' as TabType, label: 'プロジェクト', icon: MdManageAccounts },
   ];
 
   const renderContent = () => {

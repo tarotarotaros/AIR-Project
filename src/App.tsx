@@ -34,7 +34,7 @@ function App() {
           >
             {isSidebarCollapsed ? <MdMenu size={24} /> : <MdMenuOpen size={24} />}
           </button>
-          <h1>Project Manager</h1>
+          <h1>AIR-Project</h1>
         </div>
       </header>
       
