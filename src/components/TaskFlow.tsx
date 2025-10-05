@@ -12,7 +12,7 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { MdList, MdInventory } from 'react-icons/md';
+import { MdList, MdInventory, MdFileDownload, MdFileUpload } from 'react-icons/md';
 import { Task, Project, Deliverable, FlowConnection } from '../types';
 import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
@@ -418,6 +418,214 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     );
   }
 
+  const handleExport = () => {
+    if (!project) return;
+
+    console.log('Exporting connections:', connections);
+    connections.forEach((conn, index) => {
+      console.log(`Connection ${index}:`, conn);
+    });
+
+    // マーメイド記法のフロー図を生成
+    let mermaidGraph = 'graph LR\n';
+
+    // タスクノードを追加
+    tasks.forEach(task => {
+      const statusLabel = getStatusLabel(task.status);
+      const priorityLabel = getPriorityLabel(task.priority);
+      mermaidGraph += `    task_${task.id}[${task.name}<br/>${statusLabel} | ${priorityLabel}]\n`;
+    });
+
+    // 成果物ノードを追加
+    deliverables.forEach(deliverable => {
+      const statusLabel = deliverable.status === 'not_ready' ? '準備中' :
+                          deliverable.status === 'ready' ? '準備完了' : '完成';
+      mermaidGraph += `    deliverable_${deliverable.id}{${deliverable.name}<br/>${statusLabel}}\n`;
+    });
+
+    mermaidGraph += '\n';
+
+    // 接続を追加（有効な接続のみ）
+    connections.forEach(connection => {
+      if (connection.source_type && connection.target_type) {
+        mermaidGraph += `    ${connection.source_type}_${connection.source_id} --> ${connection.target_type}_${connection.target_id}\n`;
+      }
+    });
+
+    // JSONデータを生成（有効な接続のみ）
+    const validConnections = connections
+      .filter(conn => conn.source_type && conn.target_type)
+      .map(conn => ({
+        source_type: conn.source_type,
+        source_id: conn.source_id,
+        target_type: conn.target_type,
+        target_id: conn.target_id,
+      }));
+
+    console.log('Valid connections for export:', validConnections);
+
+    const exportData = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      project: {
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        created_at: project.created_at,
+      },
+      tasks: tasks,
+      deliverables: deliverables,
+      connections: validConnections,
+    };
+
+    // Markdownファイルを生成
+    const markdown = `# ${project.name}
+
+## プロセスフロー図
+
+\`\`\`mermaid
+${mermaidGraph}\`\`\`
+
+## プロジェクト詳細データ
+
+\`\`\`json
+${JSON.stringify(exportData, null, 2)}
+\`\`\`
+`;
+
+    // ファイルをダウンロード
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_flow.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.md';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const text = await file.text();
+
+      // JSONデータを抽出
+      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+      if (!jsonMatch) {
+        alert('不正なファイル形式です。JSONデータが見つかりません。');
+        return;
+      }
+
+      try {
+        const importData = JSON.parse(jsonMatch[1]);
+
+        // バージョンチェック
+        if (importData.version !== '1.0') {
+          alert('サポートされていないバージョンです。');
+          return;
+        }
+
+        // データをインポート（IDマッピングを保持）
+        console.log('Importing data:', importData);
+
+        // IDマッピング用のMap
+        const taskIdMap = new Map<number, number>(); // 旧ID -> 新ID
+        const deliverableIdMap = new Map<number, number>(); // 旧ID -> 新ID
+
+        // タスクをインポート
+        for (const task of importData.tasks) {
+          const newTask = await createTask({
+            project_id: project!.id,
+            name: task.name,
+            description: task.description || '',
+            status: task.status || 'not_started',
+            priority: task.priority || 'medium',
+            start_date: task.start_date,
+            end_date: task.end_date,
+            duration_days: task.duration_days,
+            position_x: task.position_x,
+            position_y: task.position_y,
+          });
+          taskIdMap.set(task.id, newTask.id);
+        }
+
+        // 成果物をインポート
+        for (const deliverable of importData.deliverables) {
+          const newDeliverable = await createDeliverable({
+            project_id: project!.id,
+            name: deliverable.name,
+            description: deliverable.description || '',
+            type: deliverable.type || 'other',
+            status: deliverable.status || 'not_ready',
+            due_date: deliverable.due_date,
+            position_x: deliverable.position_x,
+            position_y: deliverable.position_y,
+          });
+          deliverableIdMap.set(deliverable.id, newDeliverable.id);
+        }
+
+        // データを再読み込み
+        await loadTasks();
+        await loadDeliverables();
+
+        // 接続をインポート
+        console.log('Importing connections:', importData.connections);
+        console.log('Task ID map:', taskIdMap);
+        console.log('Deliverable ID map:', deliverableIdMap);
+
+        for (const connection of importData.connections) {
+          // 空のオブジェクトをスキップ
+          if (!connection.source_type || !connection.target_type) {
+            console.warn('Skipping invalid connection:', connection);
+            continue;
+          }
+
+          console.log('Processing connection:', connection);
+
+          const sourceId = connection.source_type === 'task'
+            ? taskIdMap.get(connection.source_id)
+            : deliverableIdMap.get(connection.source_id);
+
+          const targetId = connection.target_type === 'task'
+            ? taskIdMap.get(connection.target_id)
+            : deliverableIdMap.get(connection.target_id);
+
+          console.log(`Mapped IDs: source ${connection.source_id} -> ${sourceId}, target ${connection.target_id} -> ${targetId}`);
+
+          if (sourceId && targetId) {
+            console.log('Creating connection...');
+            await createConnection({
+              project_id: project!.id,
+              source_type: connection.source_type,
+              source_id: sourceId,
+              target_type: connection.target_type,
+              target_id: targetId,
+            });
+          } else {
+            console.warn('Skipping connection due to missing IDs');
+          }
+        }
+
+        // 接続を再読み込み
+        await loadConnections();
+        console.log('Connections after import:', connections);
+
+        alert('インポートが完了しました。');
+
+      } catch (error) {
+        console.error('Import error:', error);
+        alert('インポートに失敗しました。ファイル形式を確認してください。');
+      }
+    };
+    input.click();
+  };
+
   return (
     <div className="task-flow">
       <div className="flow-controls">
@@ -429,6 +637,16 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           <MdInventory size={20} />
           成果物追加
         </button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+          <button onClick={handleImport} className="btn-secondary">
+            <MdFileUpload size={20} />
+            インポート
+          </button>
+          <button onClick={handleExport} className="btn-secondary">
+            <MdFileDownload size={20} />
+            エクスポート
+          </button>
+        </div>
       </div>
 
       <div className="react-flow-container" style={{ height: '500px' }}>
