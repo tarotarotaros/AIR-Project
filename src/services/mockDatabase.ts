@@ -126,34 +126,23 @@ export async function getTasks(projectId: number): Promise<Task[]> {
 }
 
 export async function createTask(
-  projectId: number,
-  name: string,
-  description?: string,
-  status: Task['status'] = 'not_started',
-  priority: Task['priority'] = 'medium'
+  task: Omit<Task, 'id' | 'created_at' | 'updated_at'>
 ): Promise<Task> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   const newTask: Task = {
     id: taskIdCounter++,
-    project_id: projectId,
-    name,
-    description: description || '',
-    status,
-    priority,
-    start_date: undefined,
-    end_date: undefined,
-    duration_days: undefined,
-    position_x: 100 + Math.random() * 200,
-    position_y: 100 + Math.random() * 200,
+    ...task,
+    position_x: task.position_x || (100 + Math.random() * 200),
+    position_y: task.position_y || (100 + Math.random() * 200),
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };
-  
+
   const tasks = loadFromStorage(TASKS_KEY);
   tasks.push(newTask);
   saveToStorage(TASKS_KEY, tasks);
-  
+
   return newTask;
 }
 
@@ -213,32 +202,23 @@ export async function getDeliverables(projectId: number): Promise<Deliverable[]>
 }
 
 export async function createDeliverable(
-  projectId: number,
-  name: string,
-  description?: string,
-  type: Deliverable['type'] = 'other',
-  due_date?: string
+  deliverable: Omit<Deliverable, 'id' | 'created_at' | 'updated_at'>
 ): Promise<Deliverable> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   const newDeliverable: Deliverable = {
     id: deliverableIdCounter++,
-    project_id: projectId,
-    name,
-    description: description || '',
-    status: 'not_ready',
-    type,
-    due_date,
-    position_x: 100 + Math.random() * 200,
-    position_y: 200 + Math.random() * 200,
+    ...deliverable,
+    position_x: deliverable.position_x || (100 + Math.random() * 200),
+    position_y: deliverable.position_y || (200 + Math.random() * 200),
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };
-  
+
   const deliverables = loadFromStorage(DELIVERABLES_KEY);
   deliverables.push(newDeliverable);
   saveToStorage(DELIVERABLES_KEY, deliverables);
-  
+
   return newDeliverable;
 }
 

@@ -91,16 +91,20 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   }, [project]);
 
   useEffect(() => {
+    console.log('Updating nodes. Tasks:', tasks.length, 'Deliverables:', deliverables.length);
+    console.log('Tasks:', tasks);
+    console.log('Deliverables:', deliverables);
+
     const allNodes: Node[] = [];
-    
+
     // タスクノードを追加
     tasks.forEach((task, index) => {
       allNodes.push({
         id: `task-${task.id}`,
         type: 'customTask',
-        position: { 
-          x: task.position_x || (150 + index * 250), 
-          y: task.position_y || 100 
+        position: {
+          x: task.position_x || (150 + index * 250),
+          y: task.position_y || 100
         },
         data: {
           task,
@@ -111,15 +115,15 @@ export default function TaskFlow({ project }: TaskFlowProps) {
         draggable: true,
       });
     });
-    
+
     // 成果物ノードを追加
     deliverables.forEach((deliverable, index) => {
       allNodes.push({
         id: `deliverable-${deliverable.id}`,
         type: 'customDeliverable',
-        position: { 
-          x: deliverable.position_x || (150 + index * 250), 
-          y: deliverable.position_y || 300 
+        position: {
+          x: deliverable.position_x || (150 + index * 250),
+          y: deliverable.position_y || 300
         },
         data: {
           deliverable,
@@ -130,7 +134,8 @@ export default function TaskFlow({ project }: TaskFlowProps) {
         draggable: true,
       });
     });
-    
+
+    console.log('Generated nodes:', allNodes.length);
     setNodes(allNodes);
   }, [tasks, deliverables, setNodes]);
 
@@ -217,22 +222,30 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   };
 
   const handleSaveTask = async (taskData: Partial<Task>) => {
+    console.log('handleSaveTask called with:', taskData);
     if (!project) return;
 
     try {
       if (taskModalMode === 'create') {
-        const newTask = await createTask(
-          project.id,
-          taskData.name!,
-          taskData.description,
-          taskData.status,
-          taskData.priority
-        );
-        setTasks([...tasks, newTask]);
+        console.log('Creating new task...');
+        const newTask = await createTask({
+          project_id: project.id,
+          name: taskData.name!,
+          description: taskData.description || '',
+          status: taskData.status || 'not_started',
+          priority: taskData.priority || 'medium',
+          start_date: taskData.start_date,
+          end_date: taskData.end_date,
+          duration_days: taskData.duration_days,
+        });
+        console.log('New task created:', newTask);
+        await loadTasks(); // データベースから再読み込み
       } else if (taskModalMode === 'edit' && selectedTask) {
-        const updatedTask = await updateTask(selectedTask.id, taskData);
-        setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
+        console.log('Updating task...');
+        await updateTask(selectedTask.id, taskData);
+        await loadTasks(); // データベースから再読み込み
       }
+      setIsTaskModalOpen(false);
     } catch (error) {
       console.error('Failed to save task:', error);
     }
@@ -252,22 +265,28 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   };
 
   const handleSaveDeliverable = async (deliverableData: Partial<Deliverable>) => {
+    console.log('handleSaveDeliverable called with:', deliverableData);
     if (!project) return;
 
     try {
       if (deliverableModalMode === 'create') {
-        const newDeliverable = await createDeliverable(
-          project.id,
-          deliverableData.name!,
-          deliverableData.description,
-          deliverableData.type,
-          deliverableData.due_date
-        );
-        setDeliverables([...deliverables, newDeliverable]);
+        console.log('Creating new deliverable...');
+        const newDeliverable = await createDeliverable({
+          project_id: project.id,
+          name: deliverableData.name!,
+          description: deliverableData.description || '',
+          type: deliverableData.type || 'other',
+          status: deliverableData.status || 'not_ready',
+          due_date: deliverableData.due_date,
+        });
+        console.log('New deliverable created:', newDeliverable);
+        await loadDeliverables(); // データベースから再読み込み
       } else if (deliverableModalMode === 'edit' && selectedDeliverable) {
-        const updatedDeliverable = await updateDeliverable(selectedDeliverable.id, deliverableData);
-        setDeliverables(deliverables.map(d => d.id === selectedDeliverable.id ? updatedDeliverable : d));
+        console.log('Updating deliverable...');
+        await updateDeliverable(selectedDeliverable.id, deliverableData);
+        await loadDeliverables(); // データベースから再読み込み
       }
+      setIsDeliverableModalOpen(false);
     } catch (error) {
       console.error('Failed to save deliverable:', error);
     }

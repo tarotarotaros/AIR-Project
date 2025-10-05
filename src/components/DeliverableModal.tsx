@@ -51,8 +51,9 @@ export default function DeliverableModal({ isOpen, onClose, onSave, deliverable,
       due_date: formData.due_date || undefined,
     };
 
+    console.log('DeliverableModal handleSubmit:', deliverableData);
     onSave(deliverableData);
-    onClose();
+    // onClose(); // TaskFlow側で閉じるので削除
   };
 
   const handleChange = (field: string, value: string) => {

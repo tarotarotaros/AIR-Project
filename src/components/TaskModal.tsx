@@ -59,8 +59,9 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
       duration_days: formData.duration_days ? parseInt(formData.duration_days) : undefined,
     };
 
+    console.log('TaskModal handleSubmit:', taskData);
     onSave(taskData);
-    onClose();
+    // onClose(); // TaskFlow側で閉じるので削除
   };
 
   const handleChange = (field: string, value: string) => {
