@@ -399,9 +399,45 @@ export async function deleteStatusMaster(id: number): Promise<void> {
 }
 
 // Assignee Master
+function getDefaultAssigneeMasters(): AssigneeMaster[] {
+  return [
+    {
+      id: 1,
+      name: '未割当',
+      email: '',
+      role: '',
+      created_at: getCurrentTimestamp(),
+      updated_at: getCurrentTimestamp(),
+    },
+    {
+      id: 2,
+      name: '山田太郎',
+      email: 'yamada@example.com',
+      role: 'エンジニア',
+      created_at: getCurrentTimestamp(),
+      updated_at: getCurrentTimestamp(),
+    },
+    {
+      id: 3,
+      name: '佐藤花子',
+      email: 'sato@example.com',
+      role: 'デザイナー',
+      created_at: getCurrentTimestamp(),
+      updated_at: getCurrentTimestamp(),
+    },
+  ];
+}
+
 export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  return loadFromStorage(ASSIGNEE_MASTERS_KEY);
+  const masters = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+  if (masters.length === 0) {
+    const defaultMasters = getDefaultAssigneeMasters();
+    saveToStorage(ASSIGNEE_MASTERS_KEY, defaultMasters);
+    assigneeMasterIdCounter = 4; // 次のIDは4から
+    return defaultMasters;
+  }
+  return masters;
 }
 
 export async function createAssigneeMaster(name: string, email?: string, role?: string): Promise<AssigneeMaster> {

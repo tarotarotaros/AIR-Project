@@ -1,9 +1,10 @@
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Task } from '../types';
+import { Task, AssigneeMaster } from '../types';
 
 interface TaskNodeData {
   task: Task;
+  assignees: AssigneeMaster[];
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
 }
@@ -43,8 +44,13 @@ const getPriorityLabel = (priority: Task['priority']) => {
 };
 
 function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
-  const { task, onEdit, onDelete } = data;
+  const { task, assignees, onEdit, onDelete } = data;
   const [isHovered, setIsHovered] = useState(false);
+
+  // 担当者名を取得
+  const assigneeName = task.assigned_to
+    ? assignees.find(a => a.id === task.assigned_to)?.name
+    : undefined;
 
   return (
     <div className="custom-task-node">
@@ -118,6 +124,11 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
         <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>
           {getStatusLabel(task.status)} | {getPriorityLabel(task.priority)}
         </div>
+        {assigneeName && (
+          <div style={{ fontSize: '10px', color: '#3b82f6', marginBottom: '2px' }}>
+            👤 {assigneeName}
+          </div>
+        )}
         {task.duration_days && (
           <div style={{ fontSize: '10px', color: '#6b7280' }}>
             {task.duration_days}日

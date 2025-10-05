@@ -16,6 +16,7 @@ export interface Task {
   start_date?: string;
   end_date?: string;
   duration_days?: number;
+  assigned_to?: number;  // 担当者マスタのID
   position_x: number;
   position_y: number;
   created_at: string;

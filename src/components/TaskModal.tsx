@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Task } from '../types';
+import { Task, AssigneeMaster } from '../types';
+import { getAssigneeMasters } from '../services/databaseAdapter';
 import Modal from './Modal';
 
 interface TaskModalProps {
@@ -19,7 +20,19 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
     start_date: '',
     end_date: '',
     duration_days: '',
+    assigned_to: 0,  // IDで管理
   });
+
+  const [assignees, setAssignees] = useState<AssigneeMaster[]>([]);
+
+  // 担当者マスタを読み込み
+  useEffect(() => {
+    const loadAssignees = async () => {
+      const data = await getAssigneeMasters();
+      setAssignees(data);
+    };
+    loadAssignees();
+  }, []);
 
   useEffect(() => {
     if (task && mode === 'edit') {
@@ -31,6 +44,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
         start_date: task.start_date || '',
         end_date: task.end_date || '',
         duration_days: task.duration_days?.toString() || '',
+        assigned_to: task.assigned_to || 0,
       });
     } else {
       setFormData({
@@ -41,6 +55,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
         start_date: '',
         end_date: '',
         duration_days: '',
+        assigned_to: 0,
       });
     }
   }, [task, mode, isOpen]);
@@ -57,6 +72,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
       start_date: formData.start_date || undefined,
       end_date: formData.end_date || undefined,
       duration_days: formData.duration_days ? parseInt(formData.duration_days) : undefined,
+      assigned_to: formData.assigned_to || undefined,
     };
 
     console.log('TaskModal handleSubmit:', taskData);
@@ -64,8 +80,12 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
     // onClose(); // TaskFlow側で閉じるので削除
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: string | number) => {
+    if (field === 'assigned_to') {
+      setFormData(prev => ({ ...prev, [field]: Number(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   return (
@@ -161,6 +181,22 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
             placeholder="日数"
             min="1"
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="task-assigned-to">担当者</label>
+          <select
+            id="task-assigned-to"
+            value={formData.assigned_to}
+            onChange={(e) => handleChange('assigned_to', e.target.value)}
+          >
+            <option value="0">選択してください</option>
+            {assignees.map((assignee) => (
+              <option key={assignee.id} value={assignee.id}>
+                {assignee.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="form-actions">

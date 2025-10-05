@@ -9,6 +9,10 @@ Claude Codeが各レスポンスを完了したら、以下のPowerShellコマ�
 New-BurntToastNotification -Text "Claude Code", "Waiting for your response." -Sound Mail
 ```
 
+**通知が必要なタイミング:**
+- レスポンス完了時（作業が終わった時）
+- **ユーザーに質問する場合**（ユーザーの回答待ちの時）
+
 この通知により、ユーザーに応答待ちを知らせます。
 
 ### Rust/Cargo PATH設定
@@ -19,6 +23,38 @@ export PATH="$PATH:/c/Users/yamamura/.cargo/bin"
 ```
 
 Tauri関連のコマンド（`npm run tauri:*`）を実行する前に、必ずこのPATH設定を行ってください。
+
+### UI実装ガイドライン
+
+**モーダルウィンドウの優先:**
+- 確認ダイアログ、エラー通知、フォーム入力など、すべてのユーザーインタラクションは**モーダルウィンドウ**で実装してください
+- `window.alert()`, `window.confirm()`, `window.prompt()`などのブラウザ標準アラートは使用しないでください
+- 既存の`Modal`コンポーネントや専用のモーダルコンポーネント（例: `ConfirmDeleteModal`, `AlertModal`）を活用してください
+
+**実装例:**
+```typescript
+// ❌ 避ける
+if (confirm('削除しますか？')) {
+  await deleteItem();
+}
+
+// ✅ 推奨
+setDeleteModalOpen(true); // モーダルを表示
+```
+
+**アイコンの使用:**
+- UI要素にアイコンを使用する場合は、絵文字ではなく**React Icons**（`react-icons`）を使用してください
+- 主に`react-icons/md`（Material Design Icons）を使用
+
+**実装例:**
+```typescript
+// ❌ 避ける
+<div>⚠️ 警告メッセージ</div>
+
+// ✅ 推奨
+import { MdWarning } from 'react-icons/md';
+<div><MdWarning size={24} /> 警告メッセージ</div>
+```
 
 ## プロジェクト概要
 Tauriを使用したデスクトップ型プロジェクト管理アプリケーション。プロセスフローダイアグラムによるタスク管理可視化機能を搭載。MS ProjectやNotionのような操作感で、個人利用向けにSQLiteローカルストレージを採用。

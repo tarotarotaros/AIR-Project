@@ -9,6 +9,8 @@ import {
 import StatusMasterModal from './StatusMasterModal';
 import AssigneeMasterModal from './AssigneeMasterModal';
 import DeliverableTypeMasterModal from './DeliverableTypeMasterModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import AlertModal from './AlertModal';
 
 type MasterType = 'status' | 'assignee' | 'deliverableType';
 
@@ -32,6 +34,19 @@ export default function MasterManagement() {
   const [isDeliverableTypeModalOpen, setIsDeliverableTypeModalOpen] = useState(false);
   const [deliverableTypeModalMode, setDeliverableTypeModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDeliverableType, setSelectedDeliverableType] = useState<DeliverableTypeMaster | null>(null);
+
+  // Delete Confirmation Modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: 'status' | 'assignee' | 'deliverableType';
+    item: StatusMaster | AssigneeMaster | DeliverableTypeMaster;
+  } | null>(null);
+
+  // Alert Modal
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertType, setAlertType] = useState<'info' | 'warning' | 'error'>('info');
 
   useEffect(() => {
     loadAllMasters();
@@ -125,14 +140,29 @@ export default function MasterManagement() {
     }
   };
 
-  const handleDeleteAssignee = async (assignee: AssigneeMaster) => {
-    if (confirm(`担当者 "${assignee.name}" を削除しますか？`)) {
-      try {
-        await deleteAssigneeMaster(assignee.id);
-        setAssigneeMasters(assigneeMasters.filter(a => a.id !== assignee.id));
-      } catch (error) {
-        console.error('Failed to delete assignee:', error);
+  const handleDeleteAssignee = (assignee: AssigneeMaster) => {
+    // 「未割当」(ID=1)は削除不可
+    if (assignee.id === 1) {
+      setAlertTitle('削除不可');
+      setAlertMessage('「未割当」は削除できません。');
+      setAlertType('warning');
+      setIsAlertModalOpen(true);
+      return;
+    }
+    setDeleteTarget({ type: 'assignee', item: assignee });
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      if (deleteTarget.type === 'assignee') {
+        await deleteAssigneeMaster(deleteTarget.item.id);
+        setAssigneeMasters(assigneeMasters.filter(a => a.id !== deleteTarget.item.id));
       }
+    } catch (error) {
+      console.error('Failed to delete:', error);
     }
   };
 
@@ -360,6 +390,28 @@ export default function MasterManagement() {
         onSave={handleSaveDeliverableType}
         deliverableType={selectedDeliverableType}
         mode={deliverableTypeModalMode}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        itemName={deleteTarget?.item.name || ''}
+        itemType={
+          deleteTarget?.type === 'status' ? 'ステータス' :
+          deleteTarget?.type === 'assignee' ? '担当者' :
+          '成果物種類'
+        }
+      />
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
       />
     </div>
   );

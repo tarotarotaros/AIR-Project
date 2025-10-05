@@ -15,11 +15,12 @@ import { toPng } from 'html-to-image';
 import 'reactflow/dist/style.css';
 import { MdList, MdInventory, MdFileDownload, MdFileUpload, MdPictureAsPdf, MdCheckCircle, MdError, MdHourglassEmpty, MdAutoAwesome } from 'react-icons/md';
 import dagre from 'dagre';
-import { Task, Project, Deliverable, FlowConnection } from '../types';
+import { Task, Project, Deliverable, FlowConnection, AssigneeMaster } from '../types';
 import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
   getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable,
-  getConnections, createConnection, deleteConnection, deleteConnectionsByNodeId
+  getConnections, createConnection, deleteConnection, deleteConnectionsByNodeId,
+  getAssigneeMasters
 } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
 import DeliverableModal from './DeliverableModal';
@@ -69,6 +70,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   const [connections, setConnections] = useState<FlowConnection[]>([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [assignees, setAssignees] = useState<AssigneeMaster[]>([]);
 
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -92,6 +94,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       loadTasks();
       loadDeliverables();
       loadConnections();
+      loadAssignees();
     } else {
       setTasks([]);
       setDeliverables([]);
@@ -134,6 +137,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           position,
           data: {
             task,
+            assignees,
             onEdit: handleEditTask,
             onDelete: handleDeleteTask,
           },
@@ -172,7 +176,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       console.log('Generated nodes:', allNodes.length);
       return allNodes;
     });
-  }, [tasks, deliverables]);
+  }, [tasks, deliverables, assignees]);
 
   useEffect(() => {
     // 接続データからReact Flowのエッジを生成
@@ -234,12 +238,21 @@ export default function TaskFlow({ project }: TaskFlowProps) {
 
   const loadConnections = async () => {
     if (!project) return;
-    
+
     try {
       const connectionsData = await getConnections(project.id);
       setConnections(connectionsData);
     } catch (error) {
       console.error('Failed to load connections:', error);
+    }
+  };
+
+  const loadAssignees = async () => {
+    try {
+      const assigneesData = await getAssigneeMasters();
+      setAssignees(assigneesData);
+    } catch (error) {
+      console.error('Failed to load assignees:', error);
     }
   };
 

@@ -369,7 +369,7 @@ button:active {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  max-width: 500px;
+  max-width: 800px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -379,9 +379,9 @@ button:active {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 1.5rem 0 1.5rem;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .modal-header h3 {
@@ -411,7 +411,8 @@ button:active {
 }
 
 .modal-body {
-  padding: 0 1.5rem 1.5rem 1.5rem;
+  padding: 1.5rem;
+  font-size: 1.1rem;
 }
 
 /* Task Form Styles */
@@ -469,8 +470,8 @@ button:active {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin: 1rem -1.5rem 0 -1.5rem;
+  padding: 1rem 1.5rem 0 1.5rem;
   border-top: 1px solid #e5e7eb;
 }
 
