@@ -19,13 +19,7 @@ const getStatusColor = (status: Task['status']) => {
 };
 
 const getPriorityBorder = (priority: Task['priority']) => {
-  switch (priority) {
-    case 'low': return '2px solid #10b981';
-    case 'medium': return '2px solid #f59e0b';
-    case 'high': return '2px solid #ef4444';
-    case 'critical': return '3px solid #dc2626';
-    default: return '2px solid #6b7280';
-  }
+  return '2px solid #000000';
 };
 
 const getStatusLabel = (status: Task['status']) => {

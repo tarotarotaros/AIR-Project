@@ -23,11 +23,16 @@ import TaskModal from './TaskModal';
 import DeliverableModal from './DeliverableModal';
 import CustomTaskNode from './CustomTaskNode';
 import CustomDeliverableNode from './CustomDeliverableNode';
+import CustomEdge from './CustomEdge';
 
 // nodeTypesをコンポーネント外で定義（重要！）
 const nodeTypes = {
   customTask: CustomTaskNode,
   customDeliverable: CustomDeliverableNode,
+};
+
+const edgeTypes = {
+  custom: CustomEdge,
 };
 
 interface TaskFlowProps {
@@ -60,12 +65,12 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   const [connections, setConnections] = useState<FlowConnection[]>([]);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  
+
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskModalMode, setTaskModalMode] = useState<'create' | 'edit'>('create');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  
+
   // Deliverable modal state
   const [isDeliverableModalOpen, setIsDeliverableModalOpen] = useState(false);
   const [deliverableModalMode, setDeliverableModalMode] = useState<'create' | 'edit'>('create');
@@ -135,18 +140,10 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       id: `connection-${connection.id}`,
       source: `${connection.source_type}-${connection.source_id}`,
       target: `${connection.target_type}-${connection.target_id}`,
-      type: 'default',
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 20,
-        height: 20,
-        color: '#2563eb',
-      },
-      style: {
-        strokeWidth: 2,
-        stroke: '#2563eb',
-      },
+      type: 'custom',
       animated: false,
+      selectable: true,
+      focusable: true,
       data: { connectionId: connection.id },
     }));
 
@@ -375,7 +372,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   return (
     <div className="task-flow">
       <div className="flow-controls">
-        <button onClick={handleCreateTask} className="btn-primary">
+        <button onClick={handleCreateTask} className="btn-secondary">
           <MdList size={20} />
           タスク追加
         </button>
@@ -386,10 +383,51 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       </div>
 
       <div className="react-flow-container" style={{ height: '500px' }}>
+        <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+          <defs>
+            <marker
+              id="arrow-default"
+              viewBox="-10 -10 20 20"
+              refX="0"
+              refY="0"
+              markerWidth="12.5"
+              markerHeight="12.5"
+              orient="auto"
+            >
+              <polyline
+                stroke="#2563eb"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1"
+                fill="#2563eb"
+                points="-5,-4 0,0 -5,4 -5,-4"
+              />
+            </marker>
+            <marker
+              id="arrow-selected"
+              viewBox="-10 -10 20 20"
+              refX="0"
+              refY="0"
+              markerWidth="12.5"
+              markerHeight="12.5"
+              orient="auto"
+            >
+              <polyline
+                stroke="#ef4444"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1"
+                fill="#ef4444"
+                points="-5,-4 0,0 -5,4 -5,-4"
+              />
+            </marker>
+          </defs>
+        </svg>
         <ReactFlow
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onEdgesDelete={onEdgesDelete}
@@ -398,19 +436,9 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           fitView
           connectOnClick={false}
           connectionMode="strict"
+          edgesFocusable={true}
+          elementsSelectable={true}
           connectionLineStyle={{ strokeWidth: 2, stroke: '#2563eb' }}
-          defaultEdgeOptions={{
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 20,
-              height: 20,
-              color: '#2563eb',
-            },
-            style: {
-              strokeWidth: 2,
-              stroke: '#2563eb',
-            },
-          }}
         >
           <Controls />
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />

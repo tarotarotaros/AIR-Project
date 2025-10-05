@@ -553,7 +553,7 @@ button:active {
 .deliverable-circle {
   width: 110px;
   height: 110px;
-  border: 2px solid #10b981;
+  border: 2px solid #000000;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -563,7 +563,7 @@ button:active {
 
 .deliverable-circle:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .deliverable-content {
@@ -626,6 +626,11 @@ button:active {
   right: -5px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
+}
+
+/* React Flow Edge Styles */
+.react-flow__edge.selected {
+  z-index: 1000;
 }
 
 /* Project Tabs Styles */
