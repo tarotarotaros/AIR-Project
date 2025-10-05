@@ -3,6 +3,7 @@ import { MdEdit, MdDelete, MdViewModule, MdViewList, MdAdd } from 'react-icons/m
 import { Project, Task } from '../types';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 interface TaskListProps {
   project: Project;
@@ -17,6 +18,10 @@ export default function TaskList({ project }: TaskListProps) {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+
+  // Delete confirmation modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
   useEffect(() => {
     loadTasks();
@@ -63,14 +68,18 @@ export default function TaskList({ project }: TaskListProps) {
     }
   };
 
-  const handleDeleteTask = async (task: Task) => {
-    if (confirm(`タスク "${task.name}" を削除しますか？`)) {
-      try {
-        await deleteTask(task.id);
-        setTasks(tasks.filter(t => t.id !== task.id));
-      } catch (error) {
-        console.error('Failed to delete task:', error);
-      }
+  const handleDeleteTask = (task: Task) => {
+    setTaskToDelete(task);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!taskToDelete) return;
+    try {
+      await deleteTask(taskToDelete.id);
+      setTasks(tasks.filter(t => t.id !== taskToDelete.id));
+    } catch (error) {
+      console.error('Failed to delete task:', error);
     }
   };
 
@@ -328,6 +337,14 @@ export default function TaskList({ project }: TaskListProps) {
         onSave={handleSaveTask}
         task={selectedTask}
         mode={modalMode}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        itemName={taskToDelete?.name || ''}
+        itemType="タスク"
       />
     </div>
   );

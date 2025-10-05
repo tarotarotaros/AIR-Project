@@ -28,6 +28,7 @@ import CustomTaskNode from './CustomTaskNode';
 import CustomDeliverableNode from './CustomDeliverableNode';
 import CustomEdge from './CustomEdge';
 import PDFExportModal, { PDFExportSettings } from './PDFExportModal';
+import AlertModal from './AlertModal';
 import jsPDF from 'jspdf';
 
 // nodeTypesをコンポーネント外で定義（重要！）
@@ -88,6 +89,12 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   // PDF progress modal state
   const [isPDFProgressModalOpen, setIsPDFProgressModalOpen] = useState(false);
   const [pdfProgressMessage, setPdfProgressMessage] = useState('PDF出力中...');
+
+  // Alert modal state
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'info' | 'warning' | 'error'>('info');
 
   useEffect(() => {
     if (project) {
@@ -566,7 +573,10 @@ ${JSON.stringify(exportData, null, 2)}
       // JSONデータを抽出
       const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
       if (!jsonMatch) {
-        alert('不正なファイル形式です。JSONデータが見つかりません。');
+        setAlertTitle('エラー');
+        setAlertMessage('不正なファイル形式です。JSONデータが見つかりません。');
+        setAlertType('error');
+        setIsAlertModalOpen(true);
         return;
       }
 
@@ -575,7 +585,10 @@ ${JSON.stringify(exportData, null, 2)}
 
         // バージョンチェック
         if (importData.version !== '1.0') {
-          alert('サポートされていないバージョンです。');
+          setAlertTitle('エラー');
+          setAlertMessage('サポートされていないバージョンです。');
+          setAlertType('error');
+          setIsAlertModalOpen(true);
           return;
         }
 
@@ -664,11 +677,17 @@ ${JSON.stringify(exportData, null, 2)}
         await loadConnections();
         console.log('Connections after import:', connections);
 
-        alert('インポートが完了しました。');
+        setAlertTitle('インポート完了');
+        setAlertMessage('インポートが完了しました。');
+        setAlertType('info');
+        setIsAlertModalOpen(true);
 
       } catch (error) {
         console.error('Import error:', error);
-        alert('インポートに失敗しました。ファイル形式を確認してください。');
+        setAlertTitle('エラー');
+        setAlertMessage('インポートに失敗しました。ファイル形式を確認してください。');
+        setAlertType('error');
+        setIsAlertModalOpen(true);
       }
     };
     input.click();
@@ -730,7 +749,10 @@ ${JSON.stringify(exportData, null, 2)}
       console.log('Auto layout completed');
     } catch (error) {
       console.error('Auto layout error:', error);
-      alert('自動整列に失敗しました。');
+      setAlertTitle('エラー');
+      setAlertMessage('自動整列に失敗しました。');
+      setAlertType('error');
+      setIsAlertModalOpen(true);
     }
   };
 
@@ -997,6 +1019,15 @@ ${JSON.stringify(exportData, null, 2)}
           </div>
         </div>
       )}
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { MdEdit, MdDelete, MdViewModule, MdViewList, MdDescription, MdComputer, 
 import { Project, Deliverable } from '../types';
 import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable } from '../services/databaseAdapter';
 import DeliverableModal from './DeliverableModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 interface DeliverableListProps {
   project: Project;
@@ -18,6 +19,10 @@ export default function DeliverableList({ project }: DeliverableListProps) {
   const [filterType, setFilterType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+
+  // Delete confirmation modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deliverableToDelete, setDeliverableToDelete] = useState<Deliverable | null>(null);
 
   useEffect(() => {
     loadDeliverables();
@@ -64,14 +69,18 @@ export default function DeliverableList({ project }: DeliverableListProps) {
     }
   };
 
-  const handleDeleteDeliverable = async (deliverable: Deliverable) => {
-    if (confirm(`成果物 "${deliverable.name}" を削除しますか？`)) {
-      try {
-        await deleteDeliverable(deliverable.id);
-        setDeliverables(deliverables.filter(d => d.id !== deliverable.id));
-      } catch (error) {
-        console.error('Failed to delete deliverable:', error);
-      }
+  const handleDeleteDeliverable = (deliverable: Deliverable) => {
+    setDeliverableToDelete(deliverable);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deliverableToDelete) return;
+    try {
+      await deleteDeliverable(deliverableToDelete.id);
+      setDeliverables(deliverables.filter(d => d.id !== deliverableToDelete.id));
+    } catch (error) {
+      console.error('Failed to delete deliverable:', error);
     }
   };
 
@@ -360,6 +369,14 @@ export default function DeliverableList({ project }: DeliverableListProps) {
         onSave={handleSaveDeliverable}
         deliverable={selectedDeliverable}
         mode={modalMode}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        itemName={deliverableToDelete?.name || ''}
+        itemType="成果物"
       />
     </div>
   );

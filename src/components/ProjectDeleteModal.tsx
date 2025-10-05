@@ -3,6 +3,7 @@ import { MdWarning, MdDelete } from 'react-icons/md';
 import { Project } from '../types';
 import { deleteProject } from '../services/databaseAdapter';
 import Modal from './Modal';
+import AlertModal from './AlertModal';
 
 interface ProjectDeleteModalProps {
   isOpen: boolean;
@@ -15,9 +16,18 @@ export default function ProjectDeleteModal({ isOpen, onClose, onConfirm, project
   const [confirmName, setConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Alert modal state
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'info' | 'warning' | 'error'>('info');
+
   const handleDelete = async () => {
     if (confirmName !== project.name) {
-      alert('プロジェクト名が一致しません');
+      setAlertTitle('エラー');
+      setAlertMessage('プロジェクト名が一致しません');
+      setAlertType('error');
+      setIsAlertModalOpen(true);
       return;
     }
 
@@ -27,7 +37,10 @@ export default function ProjectDeleteModal({ isOpen, onClose, onConfirm, project
       onConfirm();
     } catch (error) {
       console.error('プロジェクトの削除に失敗しました:', error);
-      alert('プロジェクトの削除に失敗しました');
+      setAlertTitle('エラー');
+      setAlertMessage('プロジェクトの削除に失敗しました');
+      setAlertType('error');
+      setIsAlertModalOpen(true);
     } finally {
       setIsDeleting(false);
     }
@@ -88,6 +101,14 @@ export default function ProjectDeleteModal({ isOpen, onClose, onConfirm, project
           </button>
         </div>
       </div>
+
+      <AlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+      />
     </Modal>
   );
 }

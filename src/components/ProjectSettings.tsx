@@ -3,6 +3,7 @@ import { MdEdit, MdDelete, MdSave, MdCancel } from 'react-icons/md';
 import { Project } from '../types';
 import { updateProject } from '../services/databaseAdapter';
 import ProjectDeleteModal from './ProjectDeleteModal';
+import AlertModal from './AlertModal';
 
 interface ProjectSettingsProps {
   project: Project | null;
@@ -16,6 +17,12 @@ export default function ProjectSettings({ project, onProjectUpdate, onProjectDel
   const [projectName, setProjectName] = useState(project?.name || '');
   const [projectDescription, setProjectDescription] = useState(project?.description || '');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Alert modal state
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'info' | 'warning' | 'error'>('info');
 
   if (!project) {
     return (
@@ -49,7 +56,10 @@ export default function ProjectSettings({ project, onProjectUpdate, onProjectDel
       onProjectUpdate?.(updatedProject);
     } catch (error) {
       console.error('プロジェクト名の更新に失敗しました:', error);
-      alert('プロジェクト名の更新に失敗しました');
+      setAlertTitle('エラー');
+      setAlertMessage('プロジェクト名の更新に失敗しました');
+      setAlertType('error');
+      setIsAlertModalOpen(true);
     }
   };
 
@@ -72,7 +82,10 @@ export default function ProjectSettings({ project, onProjectUpdate, onProjectDel
       onProjectUpdate?.(updatedProject);
     } catch (error) {
       console.error('説明の更新に失敗しました:', error);
-      alert('説明の更新に失敗しました');
+      setAlertTitle('エラー');
+      setAlertMessage('説明の更新に失敗しました');
+      setAlertType('error');
+      setIsAlertModalOpen(true);
     }
   };
 
@@ -176,6 +189,14 @@ export default function ProjectSettings({ project, onProjectUpdate, onProjectDel
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
         project={project}
+      />
+
+      <AlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
       />
     </div>
   );

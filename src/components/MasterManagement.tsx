@@ -98,15 +98,9 @@ export default function MasterManagement() {
     }
   };
 
-  const handleDeleteStatus = async (status: StatusMaster) => {
-    if (confirm(`ステータス "${status.name}" を削除しますか？`)) {
-      try {
-        await deleteStatusMaster(status.id);
-        setStatusMasters(statusMasters.filter(s => s.id !== status.id));
-      } catch (error) {
-        console.error('Failed to delete status:', error);
-      }
-    }
+  const handleDeleteStatus = (status: StatusMaster) => {
+    setDeleteTarget({ type: 'status', item: status });
+    setIsDeleteModalOpen(true);
   };
 
   // Assignee Master handlers
@@ -157,9 +151,15 @@ export default function MasterManagement() {
     if (!deleteTarget) return;
 
     try {
-      if (deleteTarget.type === 'assignee') {
+      if (deleteTarget.type === 'status') {
+        await deleteStatusMaster(deleteTarget.item.id);
+        setStatusMasters(statusMasters.filter(s => s.id !== deleteTarget.item.id));
+      } else if (deleteTarget.type === 'assignee') {
         await deleteAssigneeMaster(deleteTarget.item.id);
         setAssigneeMasters(assigneeMasters.filter(a => a.id !== deleteTarget.item.id));
+      } else if (deleteTarget.type === 'deliverableType') {
+        await deleteDeliverableTypeMaster(deleteTarget.item.id);
+        setDeliverableTypeMasters(deliverableTypeMasters.filter(d => d.id !== deleteTarget.item.id));
       }
     } catch (error) {
       console.error('Failed to delete:', error);
@@ -197,15 +197,9 @@ export default function MasterManagement() {
     }
   };
 
-  const handleDeleteDeliverableType = async (deliverableType: DeliverableTypeMaster) => {
-    if (confirm(`成果物種類 "${deliverableType.name}" を削除しますか？`)) {
-      try {
-        await deleteDeliverableTypeMaster(deliverableType.id);
-        setDeliverableTypeMasters(deliverableTypeMasters.filter(d => d.id !== deliverableType.id));
-      } catch (error) {
-        console.error('Failed to delete deliverable type:', error);
-      }
-    }
+  const handleDeleteDeliverableType = (deliverableType: DeliverableTypeMaster) => {
+    setDeleteTarget({ type: 'deliverableType', item: deliverableType });
+    setIsDeleteModalOpen(true);
   };
 
   const tabs = [
