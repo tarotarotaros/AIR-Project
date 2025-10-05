@@ -16,10 +16,17 @@
   "dependencies": {
     "@tauri-apps/api": "^1.5.0",
     "@tauri-apps/plugin-sql": "^2.3.0",
+    "@xyflow/react": "^12.8.6",
+    "dom-to-image-more": "^3.7.1",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
-    "reactflow": "^11.11.4"
+    "reactflow": "^11.11.4",
+    "svg2pdf.js": "^2.6.0"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.0",

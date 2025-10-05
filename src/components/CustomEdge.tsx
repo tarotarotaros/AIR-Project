@@ -20,20 +20,42 @@ function CustomEdge({
     targetPosition,
   });
 
-  const markerEnd = selected
-    ? 'url(#arrow-selected)'
-    : 'url(#arrow-default)';
+  // ユニークなマーカーIDを生成
+  const markerId = `arrow-${id}`;
+  const markerColor = selected ? '#ef4444' : '#2563eb';
 
   return (
-    <BaseEdge
-      id={id}
-      path={edgePath}
-      markerEnd={markerEnd}
-      style={{
-        stroke: selected ? '#ef4444' : '#2563eb',
-        strokeWidth: 2,
-      }}
-    />
+    <>
+      <defs>
+        <marker
+          id={markerId}
+          viewBox="-10 -10 20 20"
+          refX="0"
+          refY="0"
+          markerWidth="12.5"
+          markerHeight="12.5"
+          orient="auto"
+        >
+          <polyline
+            stroke={markerColor}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1"
+            fill={markerColor}
+            points="-5,-4 0,0 -5,4 -5,-4"
+          />
+        </marker>
+      </defs>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={`url(#${markerId})`}
+        style={{
+          stroke: markerColor,
+          strokeWidth: 2,
+        }}
+      />
+    </>
   );
 }
 

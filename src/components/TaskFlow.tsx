@@ -11,8 +11,9 @@ import ReactFlow, {
   BackgroundVariant,
   MarkerType,
 } from 'reactflow';
+import { toPng } from 'html-to-image';
 import 'reactflow/dist/style.css';
-import { MdList, MdInventory, MdFileDownload, MdFileUpload } from 'react-icons/md';
+import { MdList, MdInventory, MdFileDownload, MdFileUpload, MdPictureAsPdf, MdCheckCircle, MdError, MdHourglassEmpty } from 'react-icons/md';
 import { Task, Project, Deliverable, FlowConnection } from '../types';
 import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
@@ -24,6 +25,8 @@ import DeliverableModal from './DeliverableModal';
 import CustomTaskNode from './CustomTaskNode';
 import CustomDeliverableNode from './CustomDeliverableNode';
 import CustomEdge from './CustomEdge';
+import PDFExportModal, { PDFExportSettings } from './PDFExportModal';
+import jsPDF from 'jspdf';
 
 // nodeTypesをコンポーネント外で定義（重要！）
 const nodeTypes = {
@@ -75,6 +78,13 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   const [isDeliverableModalOpen, setIsDeliverableModalOpen] = useState(false);
   const [deliverableModalMode, setDeliverableModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDeliverable, setSelectedDeliverable] = useState<Deliverable | null>(null);
+
+  // PDF export modal state
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+
+  // PDF progress modal state
+  const [isPDFProgressModalOpen, setIsPDFProgressModalOpen] = useState(false);
+  const [pdfProgressMessage, setPdfProgressMessage] = useState('PDF出力中...');
 
   useEffect(() => {
     if (project) {
@@ -626,6 +636,129 @@ ${JSON.stringify(exportData, null, 2)}
     input.click();
   };
 
+  const handlePDFExport = async (settings: PDFExportSettings) => {
+    if (!project) return;
+
+    try {
+      // 進捗モーダルを表示
+      setIsPDFModalOpen(false);
+      setIsPDFProgressModalOpen(true);
+      setPdfProgressMessage('PDF出力中...');
+
+      console.log('Starting PDF export...');
+
+      // React FlowのtoPng関数を使用（エッジも含めて正確にキャプチャ）
+      const dataUrl = await toPng(document.querySelector('.react-flow') as HTMLElement, {
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        filter: (node) => {
+          // 背景ドットを除外
+          if (node.classList?.contains('react-flow__background')) {
+            return false;
+          }
+          // コントロールパネルを除外
+          if (node.classList?.contains('react-flow__controls')) {
+            return false;
+          }
+          return true;
+        },
+      });
+
+      console.log('Image created with toPng');
+
+      // 画像を読み込んでサイズを取得
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = dataUrl;
+      });
+
+      console.log('Image loaded:', img.width, 'x', img.height);
+
+      // 用紙サイズの設定（mm単位）
+      const pageSizes = {
+        A4: { width: 210, height: 297 },
+        A3: { width: 297, height: 420 },
+        B5: { width: 182, height: 257 },
+        B4: { width: 257, height: 364 },
+      };
+
+      const pageSize = pageSizes[settings.pageSize];
+      const orientation = settings.orientation;
+
+      // PDFの作成
+      const pdf = new jsPDF({
+        orientation: orientation,
+        unit: 'mm',
+        format: [pageSize.width, pageSize.height],
+      });
+
+      const pdfWidth = orientation === 'portrait' ? pageSize.width : pageSize.height;
+      const pdfHeight = orientation === 'portrait' ? pageSize.height : pageSize.width;
+
+      // ヘッダー・フッター用のマージン
+      const headerHeight = 20;
+      const footerHeight = 10;
+      const margin = 10;
+      const contentAreaHeight = pdfHeight - headerHeight - footerHeight - margin * 2;
+
+      // ヘッダー: プロジェクト名（中央揃え）- Canvasで日本語描画
+      const headerCanvas = document.createElement('canvas');
+      headerCanvas.width = (pdfWidth - margin * 2) * 10; // 高解像度
+      headerCanvas.height = 100;
+      const headerCtx = headerCanvas.getContext('2d')!;
+      headerCtx.font = 'bold 48px sans-serif';
+      headerCtx.fillStyle = '#000000';
+      headerCtx.textAlign = 'center';
+      headerCtx.fillText(project.name, headerCanvas.width / 2, 70);
+      const headerDataUrl = headerCanvas.toDataURL('image/png');
+      pdf.addImage(headerDataUrl, 'PNG', margin, margin, pdfWidth - margin * 2, 15);
+
+      // 画像のアスペクト比を維持しながらPDFに収める
+      const imgWidth = img.width;
+      const imgHeight = img.height;
+      const ratio = Math.min((pdfWidth - margin * 2) / imgWidth, contentAreaHeight / imgHeight);
+      const width = imgWidth * ratio;
+      const height = imgHeight * ratio;
+
+      console.log('PDF dimensions:', width, 'x', height);
+
+      // 画像を配置（ヘッダーの下）
+      pdf.addImage(dataUrl, 'PNG', margin, margin + headerHeight, width, height);
+
+      // フッター: 出力日時（右揃え）- Canvasで日本語描画
+      const now = new Date();
+      const dateTimeStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const footerCanvas = document.createElement('canvas');
+      footerCanvas.width = (pdfWidth - margin * 2) * 10;
+      footerCanvas.height = 60;
+      const footerCtx = footerCanvas.getContext('2d')!;
+      footerCtx.font = '32px sans-serif';
+      footerCtx.fillStyle = '#000000';
+      footerCtx.textAlign = 'right';
+      footerCtx.fillText(dateTimeStr, footerCanvas.width - 10, 40);
+      const footerDataUrl = footerCanvas.toDataURL('image/png');
+      pdf.addImage(footerDataUrl, 'PNG', margin, pdfHeight - footerHeight, pdfWidth - margin * 2, 8);
+
+      // PDFを保存
+      pdf.save(`${project.name}_flow.pdf`);
+      console.log('PDF saved');
+
+      // 完了メッセージを表示
+      setPdfProgressMessage('PDF出力が完了しました');
+      setTimeout(() => {
+        setIsPDFProgressModalOpen(false);
+      }, 1500);
+    } catch (error) {
+      console.error('PDF export error:', error);
+      setPdfProgressMessage('PDF出力に失敗しました');
+      setTimeout(() => {
+        setIsPDFProgressModalOpen(false);
+      }, 2000);
+    }
+  };
+
   return (
     <div className="task-flow">
       <div className="flow-controls">
@@ -645,6 +778,10 @@ ${JSON.stringify(exportData, null, 2)}
           <button onClick={handleExport} className="btn-secondary">
             <MdFileDownload size={20} />
             エクスポート
+          </button>
+          <button onClick={() => setIsPDFModalOpen(true)} className="btn-secondary">
+            <MdPictureAsPdf size={20} />
+            PDF出力
           </button>
         </div>
       </div>
@@ -734,6 +871,30 @@ ${JSON.stringify(exportData, null, 2)}
         deliverable={selectedDeliverable}
         mode={deliverableModalMode}
       />
+
+      <PDFExportModal
+        isOpen={isPDFModalOpen}
+        onClose={() => setIsPDFModalOpen(false)}
+        onExport={handlePDFExport}
+      />
+
+      {/* PDF出力進捗モーダル */}
+      {isPDFProgressModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ textAlign: 'center', padding: '2rem' }}>
+            <h2 style={{ marginBottom: '1rem' }}>{pdfProgressMessage}</h2>
+            {pdfProgressMessage === 'PDF出力中...' && (
+              <MdHourglassEmpty size={48} style={{ color: '#6b7280' }} />
+            )}
+            {pdfProgressMessage === 'PDF出力が完了しました' && (
+              <MdCheckCircle size={48} style={{ color: '#10b981' }} />
+            )}
+            {pdfProgressMessage === 'PDF出力に失敗しました' && (
+              <MdError size={48} style={{ color: '#ef4444' }} />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
