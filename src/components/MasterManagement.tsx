@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MdLabel, MdPerson, MdInventory, MdEdit, MdDelete } from 'react-icons/md';
 import { StatusMaster, AssigneeMaster, DeliverableTypeMaster } from '../types';
+import { renderIcon } from '../utils/iconMapper';
 import {
   getStatusMasters, createStatusMaster, updateStatusMaster, deleteStatusMaster,
   getAssigneeMasters, createAssigneeMaster, updateAssigneeMaster, deleteAssigneeMaster,
@@ -310,7 +311,7 @@ export default function MasterManagement() {
         {deliverableTypeMasters.map((deliverableType) => (
           <div key={deliverableType.id} className="master-item">
             <div className="master-item-content">
-              <span className="type-icon">{deliverableType.icon}</span>
+              <span className="type-icon">{renderIcon(deliverableType.icon, 24)}</span>
               <span className="type-name">{deliverableType.name}</span>
               <div 
                 className="type-color" 

@@ -15,12 +15,12 @@ import { toPng } from 'html-to-image';
 import 'reactflow/dist/style.css';
 import { MdList, MdInventory, MdFileDownload, MdFileUpload, MdPictureAsPdf, MdCheckCircle, MdError, MdHourglassEmpty, MdAutoAwesome } from 'react-icons/md';
 import dagre from 'dagre';
-import { Task, Project, Deliverable, FlowConnection, AssigneeMaster } from '../types';
+import { Task, Project, Deliverable, FlowConnection, AssigneeMaster, DeliverableTypeMaster } from '../types';
 import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
   getDeliverables, createDeliverable, updateDeliverable, updateDeliverablePosition, deleteDeliverable,
   getConnections, createConnection, deleteConnection, deleteConnectionsByNodeId,
-  getAssigneeMasters
+  getAssigneeMasters, getDeliverableTypeMasters
 } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
 import DeliverableModal from './DeliverableModal';
@@ -72,6 +72,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [assignees, setAssignees] = useState<AssigneeMaster[]>([]);
+  const [deliverableTypeMasters, setDeliverableTypeMasters] = useState<DeliverableTypeMaster[]>([]);
 
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -102,6 +103,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       loadDeliverables();
       loadConnections();
       loadAssignees();
+      loadDeliverableTypeMasters();
     } else {
       setTasks([]);
       setDeliverables([]);
@@ -109,6 +111,30 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       setNodes([]);
       setEdges([]);
     }
+  }, [project]);
+
+  // ウィンドウフォーカス時・画面表示時にマスタデータを再読み込み
+  useEffect(() => {
+    const reloadMasterData = () => {
+      if (project) {
+        loadDeliverableTypeMasters();
+        loadAssignees();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        reloadMasterData();
+      }
+    };
+
+    window.addEventListener('focus', reloadMasterData);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', reloadMasterData);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [project]);
 
   useEffect(() => {
@@ -172,6 +198,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
           position,
           data: {
             deliverable,
+            deliverableTypeMasters,
             onEdit: handleEditDeliverable,
             onDelete: handleDeleteDeliverable,
           },
@@ -183,7 +210,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       console.log('Generated nodes:', allNodes.length);
       return allNodes;
     });
-  }, [tasks, deliverables, assignees]);
+  }, [tasks, deliverables, assignees, deliverableTypeMasters]);
 
   useEffect(() => {
     // 接続データからReact Flowのエッジを生成
@@ -260,6 +287,15 @@ export default function TaskFlow({ project }: TaskFlowProps) {
       setAssignees(assigneesData);
     } catch (error) {
       console.error('Failed to load assignees:', error);
+    }
+  };
+
+  const loadDeliverableTypeMasters = async () => {
+    try {
+      const typeMastersData = await getDeliverableTypeMasters();
+      setDeliverableTypeMasters(typeMastersData);
+    } catch (error) {
+      console.error('Failed to load deliverable type masters:', error);
     }
   };
 

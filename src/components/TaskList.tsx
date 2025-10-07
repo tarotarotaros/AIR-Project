@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdViewModule, MdViewList, MdAdd } from 'react-icons/md';
-import { Project, Task } from '../types';
-import { getTasks, createTask, updateTask, deleteTask } from '../services/databaseAdapter';
+import { Project, Task, StatusMaster } from '../types';
+import { getTasks, createTask, updateTask, deleteTask, getStatusMasters } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
@@ -11,6 +11,7 @@ interface TaskListProps {
 
 export default function TaskList({ project }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [statusMasters, setStatusMasters] = useState<StatusMaster[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -25,6 +26,7 @@ export default function TaskList({ project }: TaskListProps) {
 
   useEffect(() => {
     loadTasks();
+    loadStatusMasters();
   }, [project]);
 
   const loadTasks = async () => {
@@ -33,6 +35,17 @@ export default function TaskList({ project }: TaskListProps) {
       setTasks(tasksData);
     } catch (error) {
       console.error('Failed to load tasks:', error);
+    }
+  };
+
+  const loadStatusMasters = async () => {
+    try {
+      const masters = await getStatusMasters();
+      // タスク用のステータスのみフィルター
+      const taskStatusMasters = masters.filter(m => m.type === 'task');
+      setStatusMasters(taskStatusMasters);
+    } catch (error) {
+      console.error('Failed to load status masters:', error);
     }
   };
 
@@ -126,7 +139,7 @@ export default function TaskList({ project }: TaskListProps) {
   // Filter and sort tasks
   const filteredAndSortedTasks = tasks
     .filter(task => {
-      if (filterStatus !== 'all' && task.status !== filterStatus) return false;
+      if (filterStatus !== 'all' && getStatusLabel(task.status) !== filterStatus) return false;
       if (searchQuery && !task.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
@@ -172,10 +185,11 @@ export default function TaskList({ project }: TaskListProps) {
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">全てのステータス</option>
-            <option value="not_started">未開始</option>
-            <option value="in_progress">進行中</option>
-            <option value="completed">完了</option>
-            <option value="blocked">ブロック</option>
+            {statusMasters.map((status) => (
+              <option key={status.id} value={status.name}>
+                {status.name}
+              </option>
+            ))}
           </select>
 
           <select

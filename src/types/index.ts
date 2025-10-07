@@ -29,7 +29,7 @@ export interface Deliverable {
   name: string;
   description?: string;
   status: 'not_ready' | 'ready' | 'completed';
-  type: 'document' | 'software' | 'design' | 'data' | 'other';
+  type: number;  // 成果物種類マスタのID
   due_date?: string;
   position_x: number;
   position_y: number;

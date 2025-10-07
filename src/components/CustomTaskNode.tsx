@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
+import { MdPerson } from 'react-icons/md';
 import { Task, AssigneeMaster } from '../types';
 
 interface TaskNodeData {
@@ -125,8 +126,9 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
           {getStatusLabel(task.status)} | {getPriorityLabel(task.priority)}
         </div>
         {assigneeName && (
-          <div style={{ fontSize: '10px', color: '#3b82f6', marginBottom: '2px' }}>
-            👤 {assigneeName}
+          <div style={{ fontSize: '10px', color: '#3b82f6', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <MdPerson size={12} />
+            {assigneeName}
           </div>
         )}
         {task.duration_days && (

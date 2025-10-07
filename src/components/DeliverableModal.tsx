@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Deliverable } from '../types';
+import { Deliverable, DeliverableTypeMaster } from '../types';
 import Modal from './Modal';
+import { getDeliverableTypeMasters } from '../services/databaseAdapter';
 
 interface DeliverableModalProps {
   isOpen: boolean;
@@ -11,13 +12,32 @@ interface DeliverableModalProps {
 }
 
 export default function DeliverableModal({ isOpen, onClose, onSave, deliverable, mode }: DeliverableModalProps) {
+  const [deliverableTypeMasters, setDeliverableTypeMasters] = useState<DeliverableTypeMaster[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     status: 'not_ready' as Deliverable['status'],
-    type: 'document' as Deliverable['type'],
+    type: 1,  // デフォルトは最初のマスタID
     due_date: '',
   });
+
+  useEffect(() => {
+    const loadMasters = async () => {
+      try {
+        const masters = await getDeliverableTypeMasters();
+        setDeliverableTypeMasters(masters);
+        // デフォルト値を最初のマスタIDに設定
+        if (masters.length > 0 && !deliverable) {
+          setFormData(prev => ({ ...prev, type: masters[0].id }));
+        }
+      } catch (error) {
+        console.error('Failed to load deliverable type masters:', error);
+      }
+    };
+    if (isOpen) {
+      loadMasters();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (deliverable && mode === 'edit') {
@@ -28,16 +48,16 @@ export default function DeliverableModal({ isOpen, onClose, onSave, deliverable,
         type: deliverable.type,
         due_date: deliverable.due_date || '',
       });
-    } else {
+    } else if (deliverableTypeMasters.length > 0) {
       setFormData({
         name: '',
         description: '',
         status: 'not_ready',
-        type: 'document',
+        type: deliverableTypeMasters[0].id,
         due_date: '',
       });
     }
-  }, [deliverable, mode, isOpen]);
+  }, [deliverable, mode, isOpen, deliverableTypeMasters]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +77,9 @@ export default function DeliverableModal({ isOpen, onClose, onSave, deliverable,
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // typeフィールドは数値に変換
+    const parsedValue = field === 'type' ? Number(value) : value;
+    setFormData(prev => ({ ...prev, [field]: parsedValue }));
   };
 
   return (
@@ -112,11 +134,11 @@ export default function DeliverableModal({ isOpen, onClose, onSave, deliverable,
               value={formData.type}
               onChange={(e) => handleChange('type', e.target.value)}
             >
-              <option value="document">ドキュメント</option>
-              <option value="software">ソフトウェア</option>
-              <option value="design">設計書</option>
-              <option value="data">データ</option>
-              <option value="other">その他</option>
+              {deliverableTypeMasters.map((master) => (
+                <option key={master.id} value={master.id}>
+                  {master.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

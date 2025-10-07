@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { MdEdit, MdDelete, MdViewModule, MdViewList, MdDescription, MdComputer, MdDesignServices, MdBarChart, MdInventory, MdAdd } from 'react-icons/md';
-import { Project, Deliverable } from '../types';
-import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable } from '../services/databaseAdapter';
+import { MdEdit, MdDelete, MdViewModule, MdViewList, MdAdd } from 'react-icons/md';
+import { Project, Deliverable, DeliverableTypeMaster, StatusMaster } from '../types';
+import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable, getDeliverableTypeMasters, getStatusMasters } from '../services/databaseAdapter';
 import DeliverableModal from './DeliverableModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import { renderIcon } from '../utils/iconMapper';
 
 interface DeliverableListProps {
   project: Project;
@@ -24,9 +25,26 @@ export default function DeliverableList({ project }: DeliverableListProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deliverableToDelete, setDeliverableToDelete] = useState<Deliverable | null>(null);
 
+  const [deliverableTypeMasters, setDeliverableTypeMasters] = useState<DeliverableTypeMaster[]>([]);
+  const [statusMasters, setStatusMasters] = useState<StatusMaster[]>([]);
+
   useEffect(() => {
     loadDeliverables();
+    loadDeliverableTypeMasters();
+    loadStatusMasters();
   }, [project]);
+
+  // ウィンドウフォーカス時にマスタデータを再読み込み
+  useEffect(() => {
+    const handleFocus = () => {
+      loadDeliverableTypeMasters();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   const loadDeliverables = async () => {
     try {
@@ -34,6 +52,26 @@ export default function DeliverableList({ project }: DeliverableListProps) {
       setDeliverables(deliverablesData);
     } catch (error) {
       console.error('Failed to load deliverables:', error);
+    }
+  };
+
+  const loadDeliverableTypeMasters = async () => {
+    try {
+      const typeMastersData = await getDeliverableTypeMasters();
+      setDeliverableTypeMasters(typeMastersData);
+    } catch (error) {
+      console.error('Failed to load deliverable type masters:', error);
+    }
+  };
+
+  const loadStatusMasters = async () => {
+    try {
+      const masters = await getStatusMasters();
+      // 成果物用のステータスのみフィルター
+      const deliverableStatusMasters = masters.filter(m => m.type === 'deliverable');
+      setStatusMasters(deliverableStatusMasters);
+    } catch (error) {
+      console.error('Failed to load status masters:', error);
     }
   };
 
@@ -93,26 +131,18 @@ export default function DeliverableList({ project }: DeliverableListProps) {
     }
   };
 
-  const getTypeLabel = (type: Deliverable['type']) => {
-    switch (type) {
-      case 'document': return 'ドキュメント';
-      case 'software': return 'ソフトウェア';
-      case 'design': return '設計書';
-      case 'data': return 'データ';
-      case 'other': return 'その他';
-      default: return type;
-    }
+  const getTypeLabel = (typeId: number) => {
+    const typeMaster = deliverableTypeMasters.find(m => m.id === typeId);
+    return typeMaster ? typeMaster.name : '不明';
   };
 
-  const getTypeIcon = (type: Deliverable['type']) => {
-    switch (type) {
-      case 'document': return <MdDescription size={24} />;
-      case 'software': return <MdComputer size={24} />;
-      case 'design': return <MdDesignServices size={24} />;
-      case 'data': return <MdBarChart size={24} />;
-      case 'other': return <MdInventory size={24} />;
-      default: return <MdInventory size={24} />;
+  const getTypeIcon = (typeId: number) => {
+    const typeMaster = deliverableTypeMasters.find(m => m.id === typeId);
+    if (typeMaster) {
+      return renderIcon(typeMaster.icon, 24);
     }
+    // マスタが見つからない場合はデフォルトアイコン
+    return renderIcon('MdInventory', 24);
   };
 
   const getStatusColor = (status: Deliverable['status']) => {
@@ -132,8 +162,8 @@ export default function DeliverableList({ project }: DeliverableListProps) {
   // Filter and sort deliverables
   const filteredAndSortedDeliverables = deliverables
     .filter(deliverable => {
-      if (filterStatus !== 'all' && deliverable.status !== filterStatus) return false;
-      if (filterType !== 'all' && deliverable.type !== filterType) return false;
+      if (filterStatus !== 'all' && getStatusLabel(deliverable.status) !== filterStatus) return false;
+      if (filterType !== 'all' && deliverable.type !== Number(filterType)) return false;
       if (searchQuery && !deliverable.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       return true;
     })
@@ -183,9 +213,11 @@ export default function DeliverableList({ project }: DeliverableListProps) {
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">全てのステータス</option>
-            <option value="not_ready">準備中</option>
-            <option value="ready">準備完了</option>
-            <option value="completed">完成</option>
+            {statusMasters.map((status) => (
+              <option key={status.id} value={status.name}>
+                {status.name}
+              </option>
+            ))}
           </select>
 
           <select
@@ -193,11 +225,11 @@ export default function DeliverableList({ project }: DeliverableListProps) {
             onChange={(e) => setFilterType(e.target.value)}
           >
             <option value="all">全ての種類</option>
-            <option value="document">ドキュメント</option>
-            <option value="software">ソフトウェア</option>
-            <option value="design">設計書</option>
-            <option value="data">データ</option>
-            <option value="other">その他</option>
+            {deliverableTypeMasters.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+              </option>
+            ))}
           </select>
 
           <select

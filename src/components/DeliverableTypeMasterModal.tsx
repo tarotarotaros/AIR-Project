@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DeliverableTypeMaster } from '../types';
 import Modal from './Modal';
+import { iconMap } from '../utils/iconMapper';
 
 interface DeliverableTypeMasterModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface DeliverableTypeMasterModalProps {
 export default function DeliverableTypeMasterModal({ isOpen, onClose, onSave, deliverableType, mode }: DeliverableTypeMasterModalProps) {
   const [formData, setFormData] = useState({
     name: '',
-    icon: '📦',
+    icon: 'MdInventory',
     color: '#6b7280',
   });
 
@@ -27,7 +28,7 @@ export default function DeliverableTypeMasterModal({ isOpen, onClose, onSave, de
     } else {
       setFormData({
         name: '',
-        icon: '📦',
+        icon: 'MdInventory',
         color: '#6b7280',
       });
     }
@@ -52,8 +53,10 @@ export default function DeliverableTypeMasterModal({ isOpen, onClose, onSave, de
   };
 
   const predefinedIcons = [
-    '📄', '💻', '🎨', '📊', '📦', '📝', '🗂️', '📁', 
-    '⚙️', '🔧', '📋', '📈', '📉', '🎯', '💡', '🔍'
+    'MdDescription', 'MdComputer', 'MdDesignServices', 'MdBarChart', 'MdInventory',
+    'MdNote', 'MdFolder', 'MdFolderOpen', 'MdSettings', 'MdBuild',
+    'MdChecklist', 'MdTrendingUp', 'MdTrendingDown', 'MdTrackChanges', 'MdLightbulb',
+    'MdSearch', 'MdCode', 'MdDataObject', 'MdStorage', 'MdCloud'
   ];
 
   const predefinedColors = [
@@ -84,25 +87,21 @@ export default function DeliverableTypeMasterModal({ isOpen, onClose, onSave, de
         <div className="form-group">
           <label htmlFor="deliverable-type-icon">アイコン</label>
           <div className="icon-picker">
-            <input
-              id="deliverable-type-icon"
-              type="text"
-              value={formData.icon}
-              onChange={(e) => handleChange('icon', e.target.value)}
-              placeholder="アイコンを入力 (例: 📄)"
-              maxLength={2}
-            />
             <div className="predefined-icons">
-              {predefinedIcons.map((icon) => (
-                <button
-                  key={icon}
-                  type="button"
-                  className={`icon-option ${formData.icon === icon ? 'selected' : ''}`}
-                  onClick={() => handleChange('icon', icon)}
-                >
-                  {icon}
-                </button>
-              ))}
+              {predefinedIcons.map((iconName) => {
+                const IconComponent = iconMap[iconName];
+                return (
+                  <button
+                    key={iconName}
+                    type="button"
+                    className={`icon-option ${formData.icon === iconName ? 'selected' : ''}`}
+                    onClick={() => handleChange('icon', iconName)}
+                    title={iconName}
+                  >
+                    <IconComponent size={32} color="#000000" />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

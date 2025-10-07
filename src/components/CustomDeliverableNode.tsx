@@ -1,9 +1,11 @@
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Deliverable } from '../types';
+import { Deliverable, DeliverableTypeMaster } from '../types';
+import { renderIcon } from '../utils/iconMapper';
 
 interface DeliverableNodeData {
   deliverable: Deliverable;
+  deliverableTypeMasters: DeliverableTypeMaster[];
   onEdit: (deliverable: Deliverable) => void;
   onDelete: (deliverable: Deliverable) => void;
 }
@@ -17,15 +19,14 @@ const getStatusColor = (status: Deliverable['status']) => {
   }
 };
 
-const getTypeIcon = (type: Deliverable['type']) => {
-  switch (type) {
-    case 'document': return '📄';
-    case 'software': return '💻';
-    case 'design': return '🎨';
-    case 'data': return '📊';
-    case 'other': return '📦';
-    default: return '📦';
+// 成果物種類マスタからアイコンを取得
+const getDeliverableTypeIcon = (typeId: number, deliverableTypeMasters: DeliverableTypeMaster[]) => {
+  const typeMaster = deliverableTypeMasters.find(m => m.id === typeId);
+  if (typeMaster) {
+    return renderIcon(typeMaster.icon, 16);
   }
+  // マスタが見つからない場合はデフォルトアイコン
+  return renderIcon('MdInventory', 16);
 };
 
 const getStatusLabel = (status: Deliverable['status']) => {
@@ -37,19 +38,13 @@ const getStatusLabel = (status: Deliverable['status']) => {
   }
 };
 
-const getTypeLabel = (type: Deliverable['type']) => {
-  switch (type) {
-    case 'document': return 'ドキュメント';
-    case 'software': return 'ソフトウェア';
-    case 'design': return '設計書';
-    case 'data': return 'データ';
-    case 'other': return 'その他';
-    default: return type;
-  }
+const getTypeLabel = (typeId: number, deliverableTypeMasters: DeliverableTypeMaster[]) => {
+  const typeMaster = deliverableTypeMasters.find(m => m.id === typeId);
+  return typeMaster ? typeMaster.name : '不明';
 };
 
 function CustomDeliverableNode({ data }: NodeProps<DeliverableNodeData>) {
-  const { deliverable, onEdit, onDelete } = data;
+  const { deliverable, deliverableTypeMasters, onEdit, onDelete } = data;
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -120,7 +115,7 @@ function CustomDeliverableNode({ data }: NodeProps<DeliverableNodeData>) {
         )}
         <div className="deliverable-content">
           <div style={{ fontSize: '16px', marginBottom: '2px' }}>
-            {getTypeIcon(deliverable.type)}
+            {getDeliverableTypeIcon(deliverable.type, deliverableTypeMasters)}
           </div>
           <div style={{ fontWeight: 'bold', fontSize: '11px', marginBottom: '1px', textAlign: 'center', lineHeight: '1.2' }}>
             {deliverable.name}
@@ -129,7 +124,7 @@ function CustomDeliverableNode({ data }: NodeProps<DeliverableNodeData>) {
             {getStatusLabel(deliverable.status)}
           </div>
           <div style={{ fontSize: '8px', color: '#9ca3af', textAlign: 'center', lineHeight: '1.1' }}>
-            {getTypeLabel(deliverable.type)}
+            {getTypeLabel(deliverable.type, deliverableTypeMasters)}
           </div>
           {deliverable.due_date && (
             <div style={{ fontSize: '8px', color: '#ef4444', textAlign: 'center', marginTop: '1px', lineHeight: '1.1' }}>

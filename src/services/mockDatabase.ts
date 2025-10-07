@@ -351,8 +351,8 @@ export async function getStatusMasters(): Promise<StatusMaster[]> {
 
 export async function createStatusMaster(name: string, type: 'task' | 'deliverable', color: string): Promise<StatusMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY);
+
+  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
   const maxOrder = Math.max(...masters.map(m => m.order), 0);
   
   const newMaster: StatusMaster = {
@@ -372,8 +372,8 @@ export async function createStatusMaster(name: string, type: 'task' | 'deliverab
 
 export async function updateStatusMaster(id: number, updates: Partial<StatusMaster>): Promise<StatusMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY);
+
+  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
   const index = masters.findIndex(m => m.id === id);
   
   if (index === -1) {
@@ -392,8 +392,8 @@ export async function updateStatusMaster(id: number, updates: Partial<StatusMast
 
 export async function deleteStatusMaster(id: number): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY);
+
+  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
   const filtered = masters.filter(m => m.id !== id);
   saveToStorage(STATUS_MASTERS_KEY, filtered);
 }
@@ -442,8 +442,8 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
 
 export async function createAssigneeMaster(name: string, email?: string, role?: string): Promise<AssigneeMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+
+  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY, getDefaultAssigneeMasters());
   
   const newMaster: AssigneeMaster = {
     id: assigneeMasterIdCounter++,
@@ -461,8 +461,8 @@ export async function createAssigneeMaster(name: string, email?: string, role?: 
 
 export async function updateAssigneeMaster(id: number, updates: Partial<AssigneeMaster>): Promise<AssigneeMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+
+  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY, getDefaultAssigneeMasters());
   const index = masters.findIndex(m => m.id === id);
   
   if (index === -1) {
@@ -481,8 +481,8 @@ export async function updateAssigneeMaster(id: number, updates: Partial<Assignee
 
 export async function deleteAssigneeMaster(id: number): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+
+  const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY, getDefaultAssigneeMasters());
   const filtered = masters.filter(m => m.id !== id);
   saveToStorage(ASSIGNEE_MASTERS_KEY, filtered);
 }
@@ -501,8 +501,8 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
 
 export async function createDeliverableTypeMaster(name: string, icon: string, color: string): Promise<DeliverableTypeMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+
+  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY, getDefaultDeliverableTypeMasters());
   const maxOrder = Math.max(...masters.map(m => m.order), 0);
   
   const newMaster: DeliverableTypeMaster = {
@@ -522,8 +522,8 @@ export async function createDeliverableTypeMaster(name: string, icon: string, co
 
 export async function updateDeliverableTypeMaster(id: number, updates: Partial<DeliverableTypeMaster>): Promise<DeliverableTypeMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+
+  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY, getDefaultDeliverableTypeMasters());
   const index = masters.findIndex(m => m.id === id);
   
   if (index === -1) {
@@ -542,8 +542,8 @@ export async function updateDeliverableTypeMaster(id: number, updates: Partial<D
 
 export async function deleteDeliverableTypeMaster(id: number): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+
+  const masters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY, getDefaultDeliverableTypeMasters());
   const filtered = masters.filter(m => m.id !== id);
   saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, filtered);
 }
@@ -563,10 +563,10 @@ function getDefaultStatusMasters(): StatusMaster[] {
 
 function getDefaultDeliverableTypeMasters(): DeliverableTypeMaster[] {
   return [
-    { id: 1, name: 'ドキュメント', icon: '📄', color: '#3b82f6', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 2, name: 'ソフトウェア', icon: '💻', color: '#10b981', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 3, name: '設計書', icon: '🎨', color: '#8b5cf6', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 4, name: 'データ', icon: '📊', color: '#f59e0b', order: 4, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 5, name: 'その他', icon: '📦', color: '#6b7280', order: 5, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 1, name: 'ドキュメント', icon: 'MdDescription', color: '#3b82f6', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 2, name: 'ソフトウェア', icon: 'MdComputer', color: '#10b981', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 3, name: '設計書', icon: 'MdDesignServices', color: '#8b5cf6', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 4, name: 'データ', icon: 'MdBarChart', color: '#f59e0b', order: 4, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 5, name: 'その他', icon: 'MdInventory', color: '#6b7280', order: 5, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
   ];
 }

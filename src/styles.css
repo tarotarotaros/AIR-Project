@@ -369,7 +369,7 @@ button:active {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  max-width: 800px;
+  max-width: 1000px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
@@ -1327,14 +1327,14 @@ button:active {
 }
 
 .predefined-icons {
-  display: flex;
-  gap: 0.25rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 0.5rem;
 }
 
 .icon-option {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border: 2px solid #e5e7eb;
   border-radius: 4px;
   cursor: pointer;

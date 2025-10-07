@@ -15,6 +15,12 @@ interface ProjectTabsProps {
 
 export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete }: ProjectTabsProps) {
   const [activeTab, setActiveTab] = useState<TabType>('flow');
+  const [tabKey, setTabKey] = useState(0);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setTabKey(prev => prev + 1); // タブ切り替え時にkeyを更新して再マウント
+  };
 
   if (!project) {
     return (
@@ -35,17 +41,17 @@ export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete 
   const renderContent = () => {
     switch (activeTab) {
       case 'flow':
-        return <TaskFlow project={project} />;
+        return <TaskFlow key={`flow-${tabKey}`} project={project} />;
       case 'tasks':
-        return <TaskList project={project} />;
+        return <TaskList key={`tasks-${tabKey}`} project={project} />;
       case 'deliverables':
-        return <DeliverableList project={project} />;
+        return <DeliverableList key={`deliverables-${tabKey}`} project={project} />;
       case 'masters':
-        return <MasterManagement />;
+        return <MasterManagement key={`masters-${tabKey}`} />;
       case 'settings':
-        return <ProjectSettings project={project} onProjectUpdate={onProjectUpdate} onProjectDelete={onProjectDelete} />;
+        return <ProjectSettings key={`settings-${tabKey}`} project={project} onProjectUpdate={onProjectUpdate} onProjectDelete={onProjectDelete} />;
       default:
-        return <TaskFlow project={project} />;
+        return <TaskFlow key={`flow-${tabKey}`} project={project} />;
     }
   };
 
@@ -58,7 +64,7 @@ export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete 
             <button
               key={tab.id}
               className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
             >
               <tab.icon className="tab-icon" size={24} />
               <span className="tab-label">{tab.label}</span>
