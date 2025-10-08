@@ -1,11 +1,12 @@
-import { Project, Task, Deliverable, FlowConnection, StatusMaster, AssigneeMaster, DeliverableTypeMaster } from "../types";
+import { Project, Task, Deliverable, FlowConnection, TaskStatusMaster, DeliverableStatusMaster, AssigneeMaster, DeliverableTypeMaster } from "../types";
 
 // Mock database using localStorage
 const PROJECTS_KEY = 'pm_projects';
 const TASKS_KEY = 'pm_tasks';
 const DELIVERABLES_KEY = 'pm_deliverables';
 const CONNECTIONS_KEY = 'pm_connections';
-const STATUS_MASTERS_KEY = 'pm_status_masters';
+const TASK_STATUS_MASTERS_KEY = 'pm_task_status_masters';
+const DELIVERABLE_STATUS_MASTERS_KEY = 'pm_deliverable_status_masters';
 const ASSIGNEE_MASTERS_KEY = 'pm_assignee_masters';
 const DELIVERABLE_TYPE_MASTERS_KEY = 'pm_deliverable_type_masters';
 
@@ -13,7 +14,8 @@ let projectIdCounter = 1;
 let taskIdCounter = 1;
 let deliverableIdCounter = 1;
 let connectionIdCounter = 1;
-let statusMasterIdCounter = 1;
+let taskStatusMasterIdCounter = 1;
+let deliverableStatusMasterIdCounter = 1;
 let assigneeMasterIdCounter = 1;
 let deliverableTypeMasterIdCounter = 1;
 
@@ -37,7 +39,11 @@ function initializeCounters() {
   const tasks: Task[] = loadFromStorage(TASKS_KEY);
   const deliverables: Deliverable[] = loadFromStorage(DELIVERABLES_KEY);
   const connections: FlowConnection[] = loadFromStorage(CONNECTIONS_KEY);
-  
+  const taskStatusMasters: TaskStatusMaster[] = loadFromStorage(TASK_STATUS_MASTERS_KEY);
+  const deliverableStatusMasters: DeliverableStatusMaster[] = loadFromStorage(DELIVERABLE_STATUS_MASTERS_KEY);
+  const assigneeMasters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY);
+  const deliverableTypeMasters: DeliverableTypeMaster[] = loadFromStorage(DELIVERABLE_TYPE_MASTERS_KEY);
+
   if (projects.length > 0) {
     projectIdCounter = Math.max(...projects.map(p => p.id)) + 1;
   }
@@ -49,6 +55,18 @@ function initializeCounters() {
   }
   if (connections.length > 0) {
     connectionIdCounter = Math.max(...connections.map(c => c.id)) + 1;
+  }
+  if (taskStatusMasters.length > 0) {
+    taskStatusMasterIdCounter = Math.max(...taskStatusMasters.map(m => m.id)) + 1;
+  }
+  if (deliverableStatusMasters.length > 0) {
+    deliverableStatusMasterIdCounter = Math.max(...deliverableStatusMasters.map(m => m.id)) + 1;
+  }
+  if (assigneeMasters.length > 0) {
+    assigneeMasterIdCounter = Math.max(...assigneeMasters.map(m => m.id)) + 1;
+  }
+  if (deliverableTypeMasters.length > 0) {
+    deliverableTypeMasterIdCounter = Math.max(...deliverableTypeMasters.map(m => m.id)) + 1;
   }
 }
 
@@ -338,64 +356,146 @@ export async function deleteConnectionsByNodeId(
 // Master management CRUD operations
 
 // Status Master
-export async function getStatusMasters(): Promise<StatusMaster[]> {
+// Task Status Master CRUD
+export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
   await new Promise(resolve => setTimeout(resolve, 100));
-  const masters = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
+  const masters = loadFromStorage(TASK_STATUS_MASTERS_KEY, getDefaultTaskStatusMasters());
   if (masters.length === 0) {
-    const defaultMasters = getDefaultStatusMasters();
-    saveToStorage(STATUS_MASTERS_KEY, defaultMasters);
+    const defaultMasters = getDefaultTaskStatusMasters();
+    saveToStorage(TASK_STATUS_MASTERS_KEY, defaultMasters);
     return defaultMasters;
   }
-  return masters;
+
+  // 重複ID除去（IDが重複している場合は最初のものを残す）
+  const uniqueMasters = masters.filter((master: TaskStatusMaster, index: number, self: TaskStatusMaster[]) =>
+    self.findIndex((m: TaskStatusMaster) => m.id === master.id) === index
+  );
+
+  if (uniqueMasters.length !== masters.length) {
+    console.warn('[mockDatabase] Duplicate task status masters detected and removed:', masters.length - uniqueMasters.length);
+    saveToStorage(TASK_STATUS_MASTERS_KEY, uniqueMasters);
+  }
+
+  return uniqueMasters;
 }
 
-export async function createStatusMaster(name: string, type: 'task' | 'deliverable', color: string): Promise<StatusMaster> {
+export async function createTaskStatusMaster(status: Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<TaskStatusMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
+  const masters: TaskStatusMaster[] = loadFromStorage(TASK_STATUS_MASTERS_KEY, getDefaultTaskStatusMasters());
   const maxOrder = Math.max(...masters.map(m => m.order), 0);
-  
-  const newMaster: StatusMaster = {
-    id: statusMasterIdCounter++,
-    name,
-    type,
-    color,
-    order: maxOrder + 1,
+
+  const newMaster: TaskStatusMaster = {
+    id: taskStatusMasterIdCounter++,
+    name: status.name,
+    color: status.color,
+    order: status.order ?? maxOrder + 1,
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };
-  
+
   masters.push(newMaster);
-  saveToStorage(STATUS_MASTERS_KEY, masters);
+  saveToStorage(TASK_STATUS_MASTERS_KEY, masters);
   return newMaster;
 }
 
-export async function updateStatusMaster(id: number, updates: Partial<StatusMaster>): Promise<StatusMaster> {
+export async function updateTaskStatusMaster(id: number, updates: Partial<TaskStatusMaster>): Promise<TaskStatusMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
+  const masters: TaskStatusMaster[] = loadFromStorage(TASK_STATUS_MASTERS_KEY, getDefaultTaskStatusMasters());
   const index = masters.findIndex(m => m.id === id);
-  
+
   if (index === -1) {
-    throw new Error('Status master not found');
+    throw new Error('Task status master not found');
   }
-  
+
   masters[index] = {
     ...masters[index],
     ...updates,
     updated_at: getCurrentTimestamp(),
   };
-  
-  saveToStorage(STATUS_MASTERS_KEY, masters);
+
+  saveToStorage(TASK_STATUS_MASTERS_KEY, masters);
   return masters[index];
 }
 
-export async function deleteStatusMaster(id: number): Promise<void> {
+export async function deleteTaskStatusMaster(id: number): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  const masters: StatusMaster[] = loadFromStorage(STATUS_MASTERS_KEY, getDefaultStatusMasters());
+  const masters: TaskStatusMaster[] = loadFromStorage(TASK_STATUS_MASTERS_KEY, getDefaultTaskStatusMasters());
   const filtered = masters.filter(m => m.id !== id);
-  saveToStorage(STATUS_MASTERS_KEY, filtered);
+  saveToStorage(TASK_STATUS_MASTERS_KEY, filtered);
+}
+
+// Deliverable Status Master CRUD
+export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMaster[]> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  const masters = loadFromStorage(DELIVERABLE_STATUS_MASTERS_KEY, getDefaultDeliverableStatusMasters());
+  if (masters.length === 0) {
+    const defaultMasters = getDefaultDeliverableStatusMasters();
+    saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, defaultMasters);
+    return defaultMasters;
+  }
+
+  // 重複ID除去
+  const uniqueMasters = masters.filter((master: DeliverableStatusMaster, index: number, self: DeliverableStatusMaster[]) =>
+    self.findIndex((m: DeliverableStatusMaster) => m.id === master.id) === index
+  );
+
+  if (uniqueMasters.length !== masters.length) {
+    console.warn('[mockDatabase] Duplicate deliverable status masters detected and removed:', masters.length - uniqueMasters.length);
+    saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, uniqueMasters);
+  }
+
+  return uniqueMasters;
+}
+
+export async function createDeliverableStatusMaster(status: Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<DeliverableStatusMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  const masters: DeliverableStatusMaster[] = loadFromStorage(DELIVERABLE_STATUS_MASTERS_KEY, getDefaultDeliverableStatusMasters());
+  const maxOrder = Math.max(...masters.map(m => m.order), 0);
+
+  const newMaster: DeliverableStatusMaster = {
+    id: deliverableStatusMasterIdCounter++,
+    name: status.name,
+    color: status.color,
+    order: status.order ?? maxOrder + 1,
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
+  };
+
+  masters.push(newMaster);
+  saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, masters);
+  return newMaster;
+}
+
+export async function updateDeliverableStatusMaster(id: number, updates: Partial<DeliverableStatusMaster>): Promise<DeliverableStatusMaster> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  const masters: DeliverableStatusMaster[] = loadFromStorage(DELIVERABLE_STATUS_MASTERS_KEY, getDefaultDeliverableStatusMasters());
+  const index = masters.findIndex(m => m.id === id);
+
+  if (index === -1) {
+    throw new Error('Deliverable status master not found');
+  }
+
+  masters[index] = {
+    ...masters[index],
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  };
+
+  saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, masters);
+  return masters[index];
+}
+
+export async function deleteDeliverableStatusMaster(id: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  const masters: DeliverableStatusMaster[] = loadFromStorage(DELIVERABLE_STATUS_MASTERS_KEY, getDefaultDeliverableStatusMasters());
+  const filtered = masters.filter(m => m.id !== id);
+  saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, filtered);
 }
 
 // Assignee Master
@@ -437,7 +537,18 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
     assigneeMasterIdCounter = 4; // 次のIDは4から
     return defaultMasters;
   }
-  return masters;
+
+  // 重複ID除去
+  const uniqueMasters = masters.filter((master: AssigneeMaster, index: number, self: AssigneeMaster[]) =>
+    self.findIndex((m: AssigneeMaster) => m.id === master.id) === index
+  );
+
+  if (uniqueMasters.length !== masters.length) {
+    console.warn('[mockDatabase] Duplicate assignee masters detected and removed:', masters.length - uniqueMasters.length);
+    saveToStorage(ASSIGNEE_MASTERS_KEY, uniqueMasters);
+  }
+
+  return uniqueMasters;
 }
 
 export async function createAssigneeMaster(name: string, email?: string, role?: string): Promise<AssigneeMaster> {
@@ -496,7 +607,18 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
     saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, defaultMasters);
     return defaultMasters;
   }
-  return masters;
+
+  // 重複ID除去
+  const uniqueMasters = masters.filter((master: DeliverableTypeMaster, index: number, self: DeliverableTypeMaster[]) =>
+    self.findIndex((m: DeliverableTypeMaster) => m.id === master.id) === index
+  );
+
+  if (uniqueMasters.length !== masters.length) {
+    console.warn('[mockDatabase] Duplicate deliverable type masters detected and removed:', masters.length - uniqueMasters.length);
+    saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, uniqueMasters);
+  }
+
+  return uniqueMasters;
 }
 
 export async function createDeliverableTypeMaster(name: string, icon: string, color: string): Promise<DeliverableTypeMaster> {
@@ -549,15 +671,20 @@ export async function deleteDeliverableTypeMaster(id: number): Promise<void> {
 }
 
 // Default data
-function getDefaultStatusMasters(): StatusMaster[] {
+function getDefaultTaskStatusMasters(): TaskStatusMaster[] {
   return [
-    { id: 1, name: '未開始', type: 'task', color: '#f3f4f6', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 2, name: '進行中', type: 'task', color: '#fef3c7', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 3, name: '完了', type: 'task', color: '#d1fae5', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 4, name: 'ブロック', type: 'task', color: '#fee2e2', order: 4, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 5, name: '準備中', type: 'deliverable', color: '#fef3c7', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 6, name: '準備完了', type: 'deliverable', color: '#dbeafe', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
-    { id: 7, name: '完成', type: 'deliverable', color: '#d1fae5', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 1, name: '未開始', color: '#f3f4f6', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 2, name: '進行中', color: '#fef3c7', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 3, name: '完了', color: '#d1fae5', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 4, name: 'ブロック', color: '#fee2e2', order: 4, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+  ];
+}
+
+function getDefaultDeliverableStatusMasters(): DeliverableStatusMaster[] {
+  return [
+    { id: 1, name: '準備中', color: '#fef3c7', order: 1, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 2, name: '準備完了', color: '#dbeafe', order: 2, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
+    { id: 3, name: '完成', color: '#d1fae5', order: 3, created_at: getCurrentTimestamp(), updated_at: getCurrentTimestamp() },
   ];
 }
 

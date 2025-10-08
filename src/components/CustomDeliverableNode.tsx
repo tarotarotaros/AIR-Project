@@ -1,23 +1,15 @@
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Deliverable, DeliverableTypeMaster } from '../types';
+import { Deliverable, DeliverableTypeMaster, StatusMaster } from '../types';
 import { renderIcon } from '../utils/iconMapper';
 
 interface DeliverableNodeData {
   deliverable: Deliverable;
   deliverableTypeMasters: DeliverableTypeMaster[];
+  statusMasters: StatusMaster[];
   onEdit: (deliverable: Deliverable) => void;
   onDelete: (deliverable: Deliverable) => void;
 }
-
-const getStatusColor = (status: Deliverable['status']) => {
-  switch (status) {
-    case 'not_ready': return '#fef3c7';
-    case 'ready': return '#dbeafe';
-    case 'completed': return '#d1fae5';
-    default: return '#f3f4f6';
-  }
-};
 
 // 成果物種類マスタからアイコンを取得
 const getDeliverableTypeIcon = (typeId: number, deliverableTypeMasters: DeliverableTypeMaster[]) => {
@@ -29,23 +21,19 @@ const getDeliverableTypeIcon = (typeId: number, deliverableTypeMasters: Delivera
   return renderIcon('MdInventory', 16);
 };
 
-const getStatusLabel = (status: Deliverable['status']) => {
-  switch (status) {
-    case 'not_ready': return '準備中';
-    case 'ready': return '準備完了';
-    case 'completed': return '完成';
-    default: return status;
-  }
-};
-
 const getTypeLabel = (typeId: number, deliverableTypeMasters: DeliverableTypeMaster[]) => {
   const typeMaster = deliverableTypeMasters.find(m => m.id === typeId);
   return typeMaster ? typeMaster.name : '不明';
 };
 
 function CustomDeliverableNode({ data }: NodeProps<DeliverableNodeData>) {
-  const { deliverable, deliverableTypeMasters, onEdit, onDelete } = data;
+  const { deliverable, deliverableTypeMasters, statusMasters, onEdit, onDelete } = data;
   const [isHovered, setIsHovered] = useState(false);
+
+  // ステータス情報を取得
+  const statusMaster = statusMasters.find(s => s.id === deliverable.status);
+  const statusLabel = statusMaster?.name || '不明';
+  const statusColor = statusMaster?.color || '#f3f4f6';
 
   return (
     <div className="custom-deliverable-node">
@@ -67,10 +55,10 @@ function CustomDeliverableNode({ data }: NodeProps<DeliverableNodeData>) {
       />
       
       {/* 成果物ノードの内容（円形） */}
-      <div 
+      <div
         className="deliverable-circle"
-        style={{ 
-          backgroundColor: getStatusColor(deliverable.status),
+        style={{
+          backgroundColor: statusColor,
           cursor: 'pointer',
           position: 'relative',
         }}
@@ -121,7 +109,7 @@ function CustomDeliverableNode({ data }: NodeProps<DeliverableNodeData>) {
             {deliverable.name}
           </div>
           <div style={{ fontSize: '9px', color: '#6b7280', textAlign: 'center', lineHeight: '1.1' }}>
-            {getStatusLabel(deliverable.status)}
+            {statusLabel}
           </div>
           <div style={{ fontSize: '8px', color: '#9ca3af', textAlign: 'center', lineHeight: '1.1' }}>
             {getTypeLabel(deliverable.type, deliverableTypeMasters)}

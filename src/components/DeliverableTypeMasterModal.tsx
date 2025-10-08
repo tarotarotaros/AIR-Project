@@ -45,7 +45,6 @@ export default function DeliverableTypeMasterModal({ isOpen, onClose, onSave, de
     };
 
     onSave(deliverableTypeData);
-    onClose();
   };
 
   const handleChange = (field: string, value: string) => {

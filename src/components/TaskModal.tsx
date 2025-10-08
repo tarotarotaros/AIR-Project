@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Task, AssigneeMaster } from '../types';
-import { getAssigneeMasters } from '../services/databaseAdapter';
+import { Task, AssigneeMaster, TaskStatusMaster } from '../types';
+import { getAssigneeMasters, getTaskStatusMasters } from '../services/databaseAdapter';
 import Modal from './Modal';
 
 interface TaskModalProps {
@@ -15,7 +15,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'not_started' as Task['status'],
+    status: 1,  // ステータスマスタのID
     priority: 'medium' as Task['priority'],
     start_date: '',
     end_date: '',
@@ -24,15 +24,70 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
   });
 
   const [assignees, setAssignees] = useState<AssigneeMaster[]>([]);
+  const [statusMasters, setStatusMasters] = useState<TaskStatusMaster[]>([]);
 
-  // 担当者マスタを読み込み
+  // マスタデータを読み込み（モーダルが開くたびに必ず実行）
   useEffect(() => {
-    const loadAssignees = async () => {
-      const data = await getAssigneeMasters();
-      setAssignees(data);
+    const loadMasters = async () => {
+      console.log('[TaskModal] Loading masters on modal open...');
+      console.log('[TaskModal] localStorage task_status_masters:', localStorage.getItem('pm_task_status_masters'));
+      console.log('[TaskModal] localStorage assignee_masters:', localStorage.getItem('pm_assignee_masters'));
+
+      const assigneesData = await getAssigneeMasters();
+      setAssignees(assigneesData);
+
+      const taskStatusMasters = await getTaskStatusMasters();
+      console.log('[TaskModal] Loaded status masters:', taskStatusMasters);
+      setStatusMasters(taskStatusMasters);
+
+      // デフォルトステータスを最初のマスタIDに設定
+      if (taskStatusMasters.length > 0 && !task) {
+        setFormData(prev => ({ ...prev, status: taskStatusMasters[0].id }));
+      }
     };
-    loadAssignees();
-  }, []);
+    if (isOpen) {
+      loadMasters();
+    }
+  }, [isOpen, task]);
+
+  // ウィンドウフォーカス時にマスタデータを再読み込み
+  useEffect(() => {
+    const handleFocus = async () => {
+      if (isOpen) {
+        const assigneesData = await getAssigneeMasters();
+        setAssignees(assigneesData);
+
+        const taskStatusMasters = await getTaskStatusMasters();
+        console.log('[TaskModal] Loaded status masters:', taskStatusMasters);
+        setStatusMasters(taskStatusMasters);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isOpen]);
+
+  // statusMasters変更時のログ
+  useEffect(() => {
+    console.log('[TaskModal] statusMasters updated:', statusMasters);
+    const statusIds = statusMasters.map(s => s.id);
+    const duplicateStatusIds = statusIds.filter((id, index) => statusIds.indexOf(id) !== index);
+    if (duplicateStatusIds.length > 0) {
+      console.error('[TaskModal] DUPLICATE STATUS IDs found:', duplicateStatusIds);
+    }
+  }, [statusMasters]);
+
+  // assignees変更時のログ
+  useEffect(() => {
+    console.log('[TaskModal] assignees updated:', assignees);
+    const assigneeIds = assignees.map(a => a.id);
+    const duplicateAssigneeIds = assigneeIds.filter((id, index) => assigneeIds.indexOf(id) !== index);
+    if (duplicateAssigneeIds.length > 0) {
+      console.error('[TaskModal] DUPLICATE ASSIGNEE IDs found:', duplicateAssigneeIds);
+    }
+  }, [assignees]);
 
   useEffect(() => {
     if (task && mode === 'edit') {
@@ -46,11 +101,11 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
         duration_days: task.duration_days?.toString() || '',
         assigned_to: task.assigned_to || 0,
       });
-    } else {
+    } else if (statusMasters.length > 0) {
       setFormData({
         name: '',
         description: '',
-        status: 'not_started',
+        status: statusMasters[0].id,
         priority: 'medium',
         start_date: '',
         end_date: '',
@@ -58,7 +113,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
         assigned_to: 0,
       });
     }
-  }, [task, mode, isOpen]);
+  }, [task, mode, isOpen, statusMasters]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +136,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
   };
 
   const handleChange = (field: string, value: string | number) => {
-    if (field === 'assigned_to') {
+    if (field === 'assigned_to' || field === 'status') {
       setFormData(prev => ({ ...prev, [field]: Number(value) }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
@@ -127,10 +182,11 @@ export default function TaskModal({ isOpen, onClose, onSave, task, mode }: TaskM
               value={formData.status}
               onChange={(e) => handleChange('status', e.target.value)}
             >
-              <option value="not_started">未開始</option>
-              <option value="in_progress">進行中</option>
-              <option value="completed">完了</option>
-              <option value="blocked">ブロック</option>
+              {statusMasters.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
             </select>
           </div>
 

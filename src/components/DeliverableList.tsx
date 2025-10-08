@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdViewModule, MdViewList, MdAdd } from 'react-icons/md';
-import { Project, Deliverable, DeliverableTypeMaster, StatusMaster } from '../types';
-import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable, getDeliverableTypeMasters, getStatusMasters } from '../services/databaseAdapter';
+import { Project, Deliverable, DeliverableTypeMaster, DeliverableStatusMaster } from '../types';
+import { getDeliverables, createDeliverable, updateDeliverable, deleteDeliverable, getDeliverableTypeMasters, getDeliverableStatusMasters } from '../services/databaseAdapter';
 import DeliverableModal from './DeliverableModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import { renderIcon } from '../utils/iconMapper';
@@ -26,7 +26,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
   const [deliverableToDelete, setDeliverableToDelete] = useState<Deliverable | null>(null);
 
   const [deliverableTypeMasters, setDeliverableTypeMasters] = useState<DeliverableTypeMaster[]>([]);
-  const [statusMasters, setStatusMasters] = useState<StatusMaster[]>([]);
+  const [statusMasters, setStatusMasters] = useState<DeliverableStatusMaster[]>([]);
 
   useEffect(() => {
     loadDeliverables();
@@ -66,9 +66,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
 
   const loadStatusMasters = async () => {
     try {
-      const masters = await getStatusMasters();
-      // 成果物用のステータスのみフィルター
-      const deliverableStatusMasters = masters.filter(m => m.type === 'deliverable');
+      const deliverableStatusMasters = await getDeliverableStatusMasters();
       setStatusMasters(deliverableStatusMasters);
     } catch (error) {
       console.error('Failed to load status masters:', error);
@@ -102,6 +100,7 @@ export default function DeliverableList({ project }: DeliverableListProps) {
         const updatedDeliverable = await updateDeliverable(selectedDeliverable.id, deliverableData);
         setDeliverables(deliverables.map(d => d.id === selectedDeliverable.id ? updatedDeliverable : d));
       }
+      setIsModalOpen(false);
     } catch (error) {
       console.error('Failed to save deliverable:', error);
     }
@@ -122,13 +121,9 @@ export default function DeliverableList({ project }: DeliverableListProps) {
     }
   };
 
-  const getStatusLabel = (status: Deliverable['status']) => {
-    switch (status) {
-      case 'not_ready': return '準備中';
-      case 'ready': return '準備完了';
-      case 'completed': return '完成';
-      default: return status;
-    }
+  const getStatusLabel = (statusId: number) => {
+    const statusMaster = statusMasters.find(s => s.id === statusId);
+    return statusMaster?.name || '不明';
   };
 
   const getTypeLabel = (typeId: number) => {
@@ -145,18 +140,16 @@ export default function DeliverableList({ project }: DeliverableListProps) {
     return renderIcon('MdInventory', 24);
   };
 
-  const getStatusColor = (status: Deliverable['status']) => {
-    switch (status) {
-      case 'not_ready': return '#fef3c7';
-      case 'ready': return '#dbeafe';
-      case 'completed': return '#d1fae5';
-      default: return '#f3f4f6';
-    }
+  const getStatusColor = (statusId: number) => {
+    const statusMaster = statusMasters.find(s => s.id === statusId);
+    return statusMaster?.color || '#f3f4f6';
   };
 
   const isOverdue = (deliverable: Deliverable) => {
     if (!deliverable.due_date) return false;
-    return new Date(deliverable.due_date) < new Date() && deliverable.status !== 'completed';
+    // 完成ステータスを持つマスタのIDを検索
+    const completedStatus = statusMasters.find(s => s.name === '完成' && s.type === 'deliverable');
+    return new Date(deliverable.due_date) < new Date() && deliverable.status !== completedStatus?.id;
   };
 
   // Filter and sort deliverables
@@ -172,9 +165,11 @@ export default function DeliverableList({ project }: DeliverableListProps) {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'status':
-          return a.status.localeCompare(b.status);
+          // ステータスIDでソート
+          return a.status - b.status;
         case 'type':
-          return a.type.localeCompare(b.type);
+          // タイプIDでソート
+          return a.type - b.type;
         case 'due_date':
           if (!a.due_date && !b.due_date) return 0;
           if (!a.due_date) return 1;

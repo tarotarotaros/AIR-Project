@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdViewModule, MdViewList, MdAdd } from 'react-icons/md';
-import { Project, Task, StatusMaster } from '../types';
-import { getTasks, createTask, updateTask, deleteTask, getStatusMasters } from '../services/databaseAdapter';
+import { Project, Task, TaskStatusMaster } from '../types';
+import { getTasks, createTask, updateTask, deleteTask, getTaskStatusMasters } from '../services/databaseAdapter';
 import TaskModal from './TaskModal';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
@@ -11,7 +11,7 @@ interface TaskListProps {
 
 export default function TaskList({ project }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [statusMasters, setStatusMasters] = useState<StatusMaster[]>([]);
+  const [statusMasters, setStatusMasters] = useState<TaskStatusMaster[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -40,9 +40,7 @@ export default function TaskList({ project }: TaskListProps) {
 
   const loadStatusMasters = async () => {
     try {
-      const masters = await getStatusMasters();
-      // タスク用のステータスのみフィルター
-      const taskStatusMasters = masters.filter(m => m.type === 'task');
+      const taskStatusMasters = await getTaskStatusMasters();
       setStatusMasters(taskStatusMasters);
     } catch (error) {
       console.error('Failed to load status masters:', error);
@@ -76,6 +74,7 @@ export default function TaskList({ project }: TaskListProps) {
         const updatedTask = await updateTask(selectedTask.id, taskData);
         setTasks(tasks.map(t => t.id === selectedTask.id ? updatedTask : t));
       }
+      setIsModalOpen(false);
     } catch (error) {
       console.error('Failed to save task:', error);
     }
@@ -96,14 +95,9 @@ export default function TaskList({ project }: TaskListProps) {
     }
   };
 
-  const getStatusLabel = (status: Task['status']) => {
-    switch (status) {
-      case 'not_started': return '未開始';
-      case 'in_progress': return '進行中';
-      case 'completed': return '完了';
-      case 'blocked': return 'ブロック';
-      default: return status;
-    }
+  const getStatusLabel = (statusId: number) => {
+    const statusMaster = statusMasters.find(s => s.id === statusId);
+    return statusMaster?.name || '不明';
   };
 
   const getPriorityLabel = (priority: Task['priority']) => {
@@ -126,14 +120,9 @@ export default function TaskList({ project }: TaskListProps) {
     }
   };
 
-  const getStatusColor = (status: Task['status']) => {
-    switch (status) {
-      case 'not_started': return '#f3f4f6';
-      case 'in_progress': return '#fef3c7';
-      case 'completed': return '#d1fae5';
-      case 'blocked': return '#fee2e2';
-      default: return '#f3f4f6';
-    }
+  const getStatusColor = (statusId: number) => {
+    const statusMaster = statusMasters.find(s => s.id === statusId);
+    return statusMaster?.color || '#f3f4f6';
   };
 
   // Filter and sort tasks
@@ -148,7 +137,8 @@ export default function TaskList({ project }: TaskListProps) {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'status':
-          return a.status.localeCompare(b.status);
+          // ステータスIDでソート
+          return a.status - b.status;
         case 'priority':
           const priorityOrder = { low: 1, medium: 2, high: 3, critical: 4 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];

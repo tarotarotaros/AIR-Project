@@ -1,37 +1,18 @@
 import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { MdPerson } from 'react-icons/md';
-import { Task, AssigneeMaster } from '../types';
+import { Task, AssigneeMaster, StatusMaster } from '../types';
 
 interface TaskNodeData {
   task: Task;
   assignees: AssigneeMaster[];
+  statusMasters: StatusMaster[];
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
 }
 
-const getStatusColor = (status: Task['status']) => {
-  switch (status) {
-    case 'not_started': return '#f3f4f6';
-    case 'in_progress': return '#fef3c7';
-    case 'completed': return '#d1fae5';
-    case 'blocked': return '#fee2e2';
-    default: return '#f3f4f6';
-  }
-};
-
 const getPriorityBorder = (priority: Task['priority']) => {
   return '2px solid #000000';
-};
-
-const getStatusLabel = (status: Task['status']) => {
-  switch (status) {
-    case 'not_started': return '未開始';
-    case 'in_progress': return '進行中';
-    case 'completed': return '完了';
-    case 'blocked': return 'ブロック';
-    default: return status;
-  }
 };
 
 const getPriorityLabel = (priority: Task['priority']) => {
@@ -45,13 +26,18 @@ const getPriorityLabel = (priority: Task['priority']) => {
 };
 
 function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
-  const { task, assignees, onEdit, onDelete } = data;
+  const { task, assignees, statusMasters, onEdit, onDelete } = data;
   const [isHovered, setIsHovered] = useState(false);
 
   // 担当者名を取得
   const assigneeName = task.assigned_to
     ? assignees.find(a => a.id === task.assigned_to)?.name
     : undefined;
+
+  // ステータス情報を取得
+  const statusMaster = statusMasters.find(s => s.id === task.status);
+  const statusLabel = statusMaster?.name || '不明';
+  const statusColor = statusMaster?.color || '#f3f4f6';
 
   return (
     <div className="custom-task-node">
@@ -70,10 +56,10 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
       />
       
       {/* タスクノードの内容 */}
-      <div 
-        style={{ 
+      <div
+        style={{
           padding: '12px',
-          backgroundColor: getStatusColor(task.status),
+          backgroundColor: statusColor,
           border: getPriorityBorder(task.priority),
           borderRadius: '6px',
           minWidth: '140px',
@@ -123,7 +109,7 @@ function CustomTaskNode({ data }: NodeProps<TaskNodeData>) {
           {task.name}
         </div>
         <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '2px' }}>
-          {getStatusLabel(task.status)} | {getPriorityLabel(task.priority)}
+          {statusLabel} | {getPriorityLabel(task.priority)}
         </div>
         {assigneeName && (
           <div style={{ fontSize: '10px', color: '#3b82f6', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '2px' }}>

@@ -11,7 +11,7 @@ export interface Task {
   project_id: number;
   name: string;
   description?: string;
-  status: 'not_started' | 'in_progress' | 'completed' | 'blocked';
+  status: number;  // ステータスマスタのID
   priority: 'low' | 'medium' | 'high' | 'critical';
   start_date?: string;
   end_date?: string;
@@ -28,7 +28,7 @@ export interface Deliverable {
   project_id: number;
   name: string;
   description?: string;
-  status: 'not_ready' | 'ready' | 'completed';
+  status: number;  // ステータスマスタのID
   type: number;  // 成果物種類マスタのID
   due_date?: string;
   position_x: number;
@@ -58,15 +58,26 @@ export interface FlowConnection {
 }
 
 // マスタ管理用の型定義
-export interface StatusMaster {
+export interface TaskStatusMaster {
   id: number;
   name: string;
-  type: 'task' | 'deliverable';
   color: string;
   order: number;
   created_at: string;
   updated_at: string;
 }
+
+export interface DeliverableStatusMaster {
+  id: number;
+  name: string;
+  color: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// 後方互換性のため（段階的に削除予定）
+export type StatusMaster = TaskStatusMaster | DeliverableStatusMaster;
 
 export interface AssigneeMaster {
   id: number;

@@ -44,7 +44,6 @@ export default function AssigneeMasterModal({ isOpen, onClose, onSave, assignee,
     };
 
     onSave(assigneeData);
-    onClose();
   };
 
   const handleChange = (field: string, value: string) => {

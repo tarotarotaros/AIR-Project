@@ -1,5 +1,5 @@
 // データベースアダプター - TauriとWeb両方で動作
-import { Project, Task, Deliverable, FlowConnection, StatusMaster, AssigneeMaster, DeliverableTypeMaster } from '../types';
+import { Project, Task, Deliverable, FlowConnection, TaskStatusMaster, DeliverableStatusMaster, AssigneeMaster, DeliverableTypeMaster } from '../types';
 
 // 環境判定
 const isTauriApp = () => {
@@ -193,43 +193,85 @@ export async function deleteConnectionsByNodeId(nodeType: 'task' | 'deliverable'
 }
 
 // ステータスマスタ関連
-export async function getStatusMasters(): Promise<StatusMaster[]> {
+// Task Status Master
+export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
   if (isTauriApp()) {
-    const { getStatusMasters } = await import('./database');
-    return getStatusMasters();
+    const { getTaskStatusMasters } = await import('./database');
+    return getTaskStatusMasters();
   } else {
-    const { getStatusMasters } = await import('./mockDatabase');
-    return getStatusMasters();
+    const { getTaskStatusMasters } = await import('./mockDatabase');
+    return getTaskStatusMasters();
   }
 }
 
-export async function createStatusMaster(status: Omit<StatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<StatusMaster> {
+export async function createTaskStatusMaster(status: Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<TaskStatusMaster> {
   if (isTauriApp()) {
-    const { createStatusMaster } = await import('./database');
-    return createStatusMaster(status);
+    const { createTaskStatusMaster } = await import('./database');
+    return createTaskStatusMaster(status);
   } else {
-    const { createStatusMaster } = await import('./mockDatabase');
-    return createStatusMaster(status);
+    const { createTaskStatusMaster } = await import('./mockDatabase');
+    return createTaskStatusMaster(status);
   }
 }
 
-export async function updateStatusMaster(id: number, updates: Partial<Omit<StatusMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<StatusMaster> {
+export async function updateTaskStatusMaster(id: number, updates: Partial<Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<TaskStatusMaster> {
   if (isTauriApp()) {
-    const { updateStatusMaster } = await import('./database');
-    return updateStatusMaster(id, updates);
+    const { updateTaskStatusMaster } = await import('./database');
+    return updateTaskStatusMaster(id, updates);
   } else {
-    const { updateStatusMaster } = await import('./mockDatabase');
-    return updateStatusMaster(id, updates);
+    const { updateTaskStatusMaster } = await import('./mockDatabase');
+    return updateTaskStatusMaster(id, updates);
   }
 }
 
-export async function deleteStatusMaster(id: number): Promise<void> {
+export async function deleteTaskStatusMaster(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteStatusMaster } = await import('./database');
-    return deleteStatusMaster(id);
+    const { deleteTaskStatusMaster } = await import('./database');
+    return deleteTaskStatusMaster(id);
   } else {
-    const { deleteStatusMaster } = await import('./mockDatabase');
-    return deleteStatusMaster(id);
+    const { deleteTaskStatusMaster } = await import('./mockDatabase');
+    return deleteTaskStatusMaster(id);
+  }
+}
+
+// Deliverable Status Master
+export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMaster[]> {
+  if (isTauriApp()) {
+    const { getDeliverableStatusMasters } = await import('./database');
+    return getDeliverableStatusMasters();
+  } else {
+    const { getDeliverableStatusMasters } = await import('./mockDatabase');
+    return getDeliverableStatusMasters();
+  }
+}
+
+export async function createDeliverableStatusMaster(status: Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<DeliverableStatusMaster> {
+  if (isTauriApp()) {
+    const { createDeliverableStatusMaster } = await import('./database');
+    return createDeliverableStatusMaster(status);
+  } else {
+    const { createDeliverableStatusMaster } = await import('./mockDatabase');
+    return createDeliverableStatusMaster(status);
+  }
+}
+
+export async function updateDeliverableStatusMaster(id: number, updates: Partial<Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<DeliverableStatusMaster> {
+  if (isTauriApp()) {
+    const { updateDeliverableStatusMaster } = await import('./database');
+    return updateDeliverableStatusMaster(id, updates);
+  } else {
+    const { updateDeliverableStatusMaster } = await import('./mockDatabase');
+    return updateDeliverableStatusMaster(id, updates);
+  }
+}
+
+export async function deleteDeliverableStatusMaster(id: number): Promise<void> {
+  if (isTauriApp()) {
+    const { deleteDeliverableStatusMaster } = await import('./database');
+    return deleteDeliverableStatusMaster(id);
+  } else {
+    const { deleteDeliverableStatusMaster } = await import('./mockDatabase');
+    return deleteDeliverableStatusMaster(id);
   }
 }
 

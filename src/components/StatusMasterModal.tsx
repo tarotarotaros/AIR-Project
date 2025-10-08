@@ -35,7 +35,11 @@ export default function StatusMasterModal({ isOpen, onClose, onSave, status, mod
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    console.log('[StatusMasterModal] Form submitted');
+    if (!formData.name.trim()) {
+      console.log('[StatusMasterModal] Empty name, aborting');
+      return;
+    }
 
     const statusData: Partial<StatusMaster> = {
       name: formData.name.trim(),
@@ -43,8 +47,8 @@ export default function StatusMasterModal({ isOpen, onClose, onSave, status, mod
       color: formData.color,
     };
 
+    console.log('[StatusMasterModal] Calling onSave with:', statusData);
     onSave(statusData);
-    onClose();
   };
 
   const handleChange = (field: string, value: string) => {
