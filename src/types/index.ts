@@ -99,4 +99,4 @@ export interface DeliverableTypeMaster {
 }
 
 // タブの種類
-export type TabType = 'flow' | 'tasks' | 'deliverables' | 'masters' | 'settings';
+export type TabType = 'flow' | 'tasks' | 'deliverables' | 'settings';

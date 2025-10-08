@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { MdAccountTree, MdList, MdInventory, MdSettings, MdManageAccounts } from 'react-icons/md';
+import { MdAccountTree, MdList, MdInventory, MdManageAccounts } from 'react-icons/md';
 import { Project, TabType } from '../types';
 import TaskFlow from './TaskFlow';
 import TaskList from './TaskList';
 import DeliverableList from './DeliverableList';
-import MasterManagement from './MasterManagement';
 import ProjectSettings from './ProjectSettings';
 
 interface ProjectTabsProps {
@@ -34,7 +33,6 @@ export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete 
     { id: 'flow' as TabType, label: 'プロセスフロー', icon: MdAccountTree },
     { id: 'tasks' as TabType, label: 'タスク', icon: MdList },
     { id: 'deliverables' as TabType, label: '成果物', icon: MdInventory },
-    { id: 'masters' as TabType, label: 'マスタ', icon: MdSettings },
     { id: 'settings' as TabType, label: 'プロジェクト', icon: MdManageAccounts },
   ];
 
@@ -46,8 +44,6 @@ export default function ProjectTabs({ project, onProjectUpdate, onProjectDelete 
         return <TaskList key={`tasks-${tabKey}`} project={project} />;
       case 'deliverables':
         return <DeliverableList key={`deliverables-${tabKey}`} project={project} />;
-      case 'masters':
-        return <MasterManagement key={`masters-${tabKey}`} />;
       case 'settings':
         return <ProjectSettings key={`settings-${tabKey}`} project={project} onProjectUpdate={onProjectUpdate} onProjectDelete={onProjectDelete} />;
       default:

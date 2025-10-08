@@ -5,9 +5,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  size?: 'default' | 'large';
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, size = 'default' }: ModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -30,7 +31,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-content ${size === 'large' ? 'modal-large' : ''}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{title}</h3>
           <button className="modal-close" onClick={onClose}>

@@ -92,6 +92,26 @@ body {
   color: #374151;
 }
 
+.master-management-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.master-management-button:hover {
+  background-color: #2563eb;
+}
+
 .app-content {
   display: flex;
   flex: 1;
@@ -373,6 +393,12 @@ button:active {
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+.modal-large {
+  max-width: 1400px;
+  width: 95%;
+  max-height: 90vh;
 }
 
 .modal-header {
