@@ -6,7 +6,7 @@
 Claude Codeが各レスポンスを完了したら、以下のPowerShellコマンドで通知を送信してください：
 
 ```powershell
-New-BurntToastNotification -Text "Claude Code", "Waiting for your response." -Sound Mail
+powershell -Command "New-BurntToastNotification -Text 'Claude Code', 'Waiting for your response.' -Sound Mai"
 ```
 
 **通知が必要なタイミング:**

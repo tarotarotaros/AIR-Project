@@ -241,6 +241,7 @@ export PATH="$PATH:/c/Users/yamamura/.cargo/bin"
    export PATH="$PATH:/c/Users/yamamura/.cargo/bin"
    npm run tauri build
    ```
+   - ビルド詳細は [リリースビルド手順](#リリースビルド手順) を参照
 
 ## その他の便利なコマンド
 
@@ -284,9 +285,269 @@ localStorage.clear()
 location.reload()
 ```
 
+## リリースビルド手順
+
+このセクションでは、Windowsインストーラー(.exe, .msi)を含む、リリース用の実行ファイルを作成する手順を説明します。
+
+### 前提条件
+
+リリースビルドを実行する前に、以下を確認してください：
+
+1. **Rust環境のセットアップ完了**
+   ```bash
+   rustc --version
+   cargo --version
+   ```
+
+2. **依存関係のインストール完了**
+   ```bash
+   npm install
+   ```
+
+3. **Windows Build Tools**（Windows環境の場合）
+   - Visual Studio Build Tools がインストール済み
+   - または Visual Studio 2022 の C++ ビルドツール
+
+### ビルドコマンド
+
+#### 基本ビルド
+
+```bash
+# PATH設定（Claude CodeやGit Bashで必要）
+export PATH="$PATH:/c/Users/yamamura/.cargo/bin"
+
+# リリースビルド実行
+npm run tauri build
+```
+
+または
+
+```bash
+npm run tauri:build
+```
+
+#### ビルドプロセス
+
+1. **フロントエンドのビルド**: React + TypeScriptアプリがViteでビルドされ、最適化されたHTMLとJavaScriptが生成されます
+2. **Rustバックエンドのビルド**: Tauriランタイムがリリースモード（最適化）でコンパイルされます
+3. **バンドル作成**: インストーラーと実行ファイルが生成されます
+
+**所要時間**: 初回ビルドは10〜20分程度かかります（以降は増分ビルドで短縮）
+
+### ビルド成果物
+
+ビルドが完了すると、以下の場所に実行ファイルとインストーラーが生成されます：
+
+```
+src-tauri/target/release/
+├── AIR-Project.exe               # 実行ファイル（スタンドアロン版）
+└── bundle/
+    ├── msi/
+    │   └── AIR-Project_X.X.X_x64_en-US.msi   # MSIインストーラー
+    └── nsis/
+        └── AIR-Project_X.X.X_x64-setup.exe   # NSISインストーラー
+```
+
+**各ファイルの説明:**
+- **AIR-Project.exe**: スタンドアロン実行ファイル（インストール不要で起動可能）
+- **.msi**: Windowsの標準インストーラー形式
+- **-setup.exe**: NSIS形式のインストーラー（より詳細なカスタマイズ可能）
+
+### バージョン設定
+
+リリースビルドのバージョンは `src-tauri/tauri.conf.json` で設定します：
+
+```json
+{
+  "package": {
+    "productName": "AIR-Project",
+    "version": "0.1.0"
+  }
+}
+```
+
+**バージョンアップ手順:**
+1. `src-tauri/tauri.conf.json` の `version` を更新
+2. `src-tauri/Cargo.toml` の `version` も合わせて更新（推奨）
+3. リリースビルドを実行
+
+### インストーラーのカスタマイズ
+
+#### アプリアイコンの変更
+
+アイコンは `src-tauri/icons/` ディレクトリに配置されています：
+
+```
+src-tauri/icons/
+├── icon.ico          # Windows用アイコン
+├── icon.png          # Linux用アイコン
+└── ...
+```
+
+新しいアイコンに変更する場合:
+1. 1024x1024のPNG画像を用意
+2. `npm install -g @tauri-apps/tauricon` でアイコン生成ツールをインストール
+3. `tauricon` コマンドで各サイズのアイコンを生成
+
+#### インストーラー設定
+
+`src-tauri/tauri.conf.json` でインストーラーの動作をカスタマイズできます：
+
+```json
+{
+  "tauri": {
+    "bundle": {
+      "identifier": "com.example.air-project",
+      "targets": ["msi", "nsis"],
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    }
+  }
+}
+```
+
+### デジタル署名（オプション）
+
+Windows SmartScreen警告を回避するには、コード署名証明書でインストーラーに署名します：
+
+```json
+{
+  "tauri": {
+    "bundle": {
+      "windows": {
+        "certificateThumbprint": "YOUR_CERTIFICATE_THUMBPRINT",
+        "digestAlgorithm": "sha256",
+        "timestampUrl": "http://timestamp.digicert.com"
+      }
+    }
+  }
+}
+```
+
+**注意**: コード署名証明書は有料で取得する必要があります。
+
+### トラブルシューティング
+
+#### ビルドエラー: Rustが見つからない
+
+```
+Error: failed to get cargo metadata: program not found
+```
+
+**解決策:**
+```bash
+# PATH設定を確認
+export PATH="$PATH:/c/Users/yamamura/.cargo/bin"
+cargo --version
+```
+
+#### ビルドエラー: メモリ不足
+
+リリースビルドはメモリを大量に使用します。以下を試してください：
+
+```bash
+# Rustコンパイラのメモリ使用を削減
+export CARGO_BUILD_JOBS=2
+npm run tauri build
+```
+
+#### ビルドエラー: アイコンが見つからない
+
+```
+Error: `icons/icon.ico` not found
+```
+
+**解決策:**
+`src-tauri/icons/` ディレクトリにアイコンファイルが存在するか確認してください。
+
+#### ビルド時間の短縮
+
+**キャッシュの活用:**
+- 初回ビルド後、Cargoは依存関係をキャッシュします
+- `src-tauri/target/` を削除しない限り、2回目以降は高速にビルドされます
+
+**並列ビルド:**
+```bash
+# CPUコア数を指定（例: 4コア）
+export CARGO_BUILD_JOBS=4
+npm run tauri build
+```
+
+### リリース配布
+
+ビルドが完了したら、以下のファイルを配布できます：
+
+**推奨配布方法:**
+1. **MSIインストーラー**: 企業環境や自動インストールに適しています
+2. **NSIS setup.exe**: 一般ユーザー向け、カスタマイズされたインストール体験を提供
+3. **スタンドアロンEXE**: ポータブル版として配布可能（インストール不要）
+
+**GitHubリリースでの配布例:**
+```bash
+# タグを作成
+git tag v0.1.0
+git push origin v0.1.0
+
+# GitHubのReleaseページでファイルをアップロード
+# - AIR-Project_0.1.0_x64-setup.exe
+# - AIR-Project_0.1.0_x64_en-US.msi
+```
+
+### ビルド後の検証
+
+リリースビルドが正常に動作するか確認してください：
+
+1. **インストーラーテスト**:
+   - MSIまたはNSISインストーラーを実行
+   - アプリケーションが正常にインストールされるか確認
+   - スタートメニューにショートカットが作成されるか確認
+
+2. **アプリケーション起動テスト**:
+   - インストールされたアプリを起動
+   - 全ての主要機能が動作するか確認
+   - データの保存と読み込みをテスト
+
+3. **アンインストールテスト**:
+   - Windowsの「アプリと機能」からアンインストール
+   - ファイルが正常に削除されるか確認
+
+### 自動ビルド（CI/CD）
+
+将来的にGitHub Actionsで自動ビルドを設定する場合の例：
+
+```yaml
+# .github/workflows/release.yml
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm install
+      - run: npm run tauri build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: windows-installer
+          path: src-tauri/target/release/bundle/**/*
+```
+
 ## 参考リンク
 
 - **Vite ドキュメント**: https://vitejs.dev/
 - **React ドキュメント**: https://react.dev/
 - **Tauri ドキュメント**: https://tauri.app/
+- **Tauri ビルドガイド**: https://tauri.app/v1/guides/building/
 - **React Flow ドキュメント**: https://reactflow.dev/

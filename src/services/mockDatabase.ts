@@ -367,7 +367,7 @@ export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
   }
 
   // 重複ID除去（IDが重複している場合は最初のものを残す）
-  const uniqueMasters = masters.filter((master: TaskStatusMaster, index: number, self: TaskStatusMaster[]) =>
+  let uniqueMasters = masters.filter((master: TaskStatusMaster, index: number, self: TaskStatusMaster[]) =>
     self.findIndex((m: TaskStatusMaster) => m.id === master.id) === index
   );
 
@@ -376,7 +376,23 @@ export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
     saveToStorage(TASK_STATUS_MASTERS_KEY, uniqueMasters);
   }
 
-  return uniqueMasters;
+  // orderフィールドがない場合はマイグレーション
+  let needsMigration = false;
+  uniqueMasters = uniqueMasters.map((master, index) => {
+    if (master.order === undefined || master.order === null) {
+      needsMigration = true;
+      return { ...master, order: index + 1 };
+    }
+    return master;
+  });
+
+  if (needsMigration) {
+    console.log('[mockDatabase] Migrating task status masters: adding order field');
+    saveToStorage(TASK_STATUS_MASTERS_KEY, uniqueMasters);
+  }
+
+  // order順にソート
+  return uniqueMasters.sort((a, b) => a.order - b.order);
 }
 
 export async function createTaskStatusMaster(status: Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<TaskStatusMaster> {
@@ -438,7 +454,7 @@ export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMa
   }
 
   // 重複ID除去
-  const uniqueMasters = masters.filter((master: DeliverableStatusMaster, index: number, self: DeliverableStatusMaster[]) =>
+  let uniqueMasters = masters.filter((master: DeliverableStatusMaster, index: number, self: DeliverableStatusMaster[]) =>
     self.findIndex((m: DeliverableStatusMaster) => m.id === master.id) === index
   );
 
@@ -447,7 +463,23 @@ export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMa
     saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, uniqueMasters);
   }
 
-  return uniqueMasters;
+  // orderフィールドがない場合はマイグレーション
+  let needsMigration = false;
+  uniqueMasters = uniqueMasters.map((master, index) => {
+    if (master.order === undefined || master.order === null) {
+      needsMigration = true;
+      return { ...master, order: index + 1 };
+    }
+    return master;
+  });
+
+  if (needsMigration) {
+    console.log('[mockDatabase] Migrating deliverable status masters: adding order field');
+    saveToStorage(DELIVERABLE_STATUS_MASTERS_KEY, uniqueMasters);
+  }
+
+  // order順にソート
+  return uniqueMasters.sort((a, b) => a.order - b.order);
 }
 
 export async function createDeliverableStatusMaster(status: Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<DeliverableStatusMaster> {
@@ -506,6 +538,7 @@ function getDefaultAssigneeMasters(): AssigneeMaster[] {
       name: '未割当',
       email: '',
       role: '',
+      order: 1,
       created_at: getCurrentTimestamp(),
       updated_at: getCurrentTimestamp(),
     },
@@ -514,6 +547,7 @@ function getDefaultAssigneeMasters(): AssigneeMaster[] {
       name: '山田太郎',
       email: 'yamada@example.com',
       role: 'エンジニア',
+      order: 2,
       created_at: getCurrentTimestamp(),
       updated_at: getCurrentTimestamp(),
     },
@@ -522,6 +556,7 @@ function getDefaultAssigneeMasters(): AssigneeMaster[] {
       name: '佐藤花子',
       email: 'sato@example.com',
       role: 'デザイナー',
+      order: 3,
       created_at: getCurrentTimestamp(),
       updated_at: getCurrentTimestamp(),
     },
@@ -539,7 +574,7 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
   }
 
   // 重複ID除去
-  const uniqueMasters = masters.filter((master: AssigneeMaster, index: number, self: AssigneeMaster[]) =>
+  let uniqueMasters = masters.filter((master: AssigneeMaster, index: number, self: AssigneeMaster[]) =>
     self.findIndex((m: AssigneeMaster) => m.id === master.id) === index
   );
 
@@ -548,23 +583,41 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
     saveToStorage(ASSIGNEE_MASTERS_KEY, uniqueMasters);
   }
 
-  return uniqueMasters;
+  // orderフィールドがない場合はマイグレーション
+  let needsMigration = false;
+  uniqueMasters = uniqueMasters.map((master, index) => {
+    if (master.order === undefined || master.order === null) {
+      needsMigration = true;
+      return { ...master, order: index + 1 };
+    }
+    return master;
+  });
+
+  if (needsMigration) {
+    console.log('[mockDatabase] Migrating assignee masters: adding order field');
+    saveToStorage(ASSIGNEE_MASTERS_KEY, uniqueMasters);
+  }
+
+  // order順にソート
+  return uniqueMasters.sort((a, b) => a.order - b.order);
 }
 
 export async function createAssigneeMaster(name: string, email?: string, role?: string): Promise<AssigneeMaster> {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   const masters: AssigneeMaster[] = loadFromStorage(ASSIGNEE_MASTERS_KEY, getDefaultAssigneeMasters());
-  
+  const maxOrder = Math.max(...masters.map(m => m.order), 0);
+
   const newMaster: AssigneeMaster = {
     id: assigneeMasterIdCounter++,
     name,
     email,
     role,
+    order: maxOrder + 1,
     created_at: getCurrentTimestamp(),
     updated_at: getCurrentTimestamp(),
   };
-  
+
   masters.push(newMaster);
   saveToStorage(ASSIGNEE_MASTERS_KEY, masters);
   return newMaster;
@@ -609,7 +662,7 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
   }
 
   // 重複ID除去
-  const uniqueMasters = masters.filter((master: DeliverableTypeMaster, index: number, self: DeliverableTypeMaster[]) =>
+  let uniqueMasters = masters.filter((master: DeliverableTypeMaster, index: number, self: DeliverableTypeMaster[]) =>
     self.findIndex((m: DeliverableTypeMaster) => m.id === master.id) === index
   );
 
@@ -618,7 +671,23 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
     saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, uniqueMasters);
   }
 
-  return uniqueMasters;
+  // orderフィールドがない場合はマイグレーション
+  let needsMigration = false;
+  uniqueMasters = uniqueMasters.map((master, index) => {
+    if (master.order === undefined || master.order === null) {
+      needsMigration = true;
+      return { ...master, order: index + 1 };
+    }
+    return master;
+  });
+
+  if (needsMigration) {
+    console.log('[mockDatabase] Migrating deliverable type masters: adding order field');
+    saveToStorage(DELIVERABLE_TYPE_MASTERS_KEY, uniqueMasters);
+  }
+
+  // order順にソート
+  return uniqueMasters.sort((a, b) => a.order - b.order);
 }
 
 export async function createDeliverableTypeMaster(name: string, icon: string, color: string): Promise<DeliverableTypeMaster> {

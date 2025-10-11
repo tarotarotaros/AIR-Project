@@ -84,6 +84,7 @@ export interface AssigneeMaster {
   name: string;
   email?: string;
   role?: string;
+  order: number;
   created_at: string;
   updated_at: string;
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MdLabel, MdPerson, MdInventory, MdEdit, MdDelete, MdTask, MdWork } from 'react-icons/md';
+import { MdLabel, MdPerson, MdInventory, MdEdit, MdDelete, MdTask, MdWork, MdArrowUpward, MdArrowDownward } from 'react-icons/md';
 import { TaskStatusMaster, DeliverableStatusMaster, AssigneeMaster, DeliverableTypeMaster } from '../types';
 import { renderIcon } from '../utils/iconMapper';
 import {
@@ -112,6 +112,34 @@ export default function MasterManagement() {
     }
   };
 
+  const handleMoveTaskStatusUp = async (status: TaskStatusMaster) => {
+    const currentIndex = taskStatusMasters.findIndex(s => s.id === status.id);
+    if (currentIndex <= 0) return; // 最初の要素は上に移動できない
+
+    const targetStatus = taskStatusMasters[currentIndex - 1];
+    // order値を入れ替え
+    await updateTaskStatusMaster(status.id, { order: targetStatus.order });
+    await updateTaskStatusMaster(targetStatus.id, { order: status.order });
+
+    // ローカルステートも更新
+    const updated = await getTaskStatusMasters();
+    setTaskStatusMasters(updated);
+  };
+
+  const handleMoveTaskStatusDown = async (status: TaskStatusMaster) => {
+    const currentIndex = taskStatusMasters.findIndex(s => s.id === status.id);
+    if (currentIndex >= taskStatusMasters.length - 1) return; // 最後の要素は下に移動できない
+
+    const targetStatus = taskStatusMasters[currentIndex + 1];
+    // order値を入れ替え
+    await updateTaskStatusMaster(status.id, { order: targetStatus.order });
+    await updateTaskStatusMaster(targetStatus.id, { order: status.order });
+
+    // ローカルステートも更新
+    const updated = await getTaskStatusMasters();
+    setTaskStatusMasters(updated);
+  };
+
   const handleDeleteTaskStatus = async (status: TaskStatusMaster) => {
     // 使用中かチェック（削除確認の前に）
     const isInUse = await checkMasterInUse('taskStatus', status.id);
@@ -160,6 +188,30 @@ export default function MasterManagement() {
     }
   };
 
+  const handleMoveDeliverableStatusUp = async (status: DeliverableStatusMaster) => {
+    const currentIndex = deliverableStatusMasters.findIndex(s => s.id === status.id);
+    if (currentIndex <= 0) return;
+
+    const targetStatus = deliverableStatusMasters[currentIndex - 1];
+    await updateDeliverableStatusMaster(status.id, { order: targetStatus.order });
+    await updateDeliverableStatusMaster(targetStatus.id, { order: status.order });
+
+    const updated = await getDeliverableStatusMasters();
+    setDeliverableStatusMasters(updated);
+  };
+
+  const handleMoveDeliverableStatusDown = async (status: DeliverableStatusMaster) => {
+    const currentIndex = deliverableStatusMasters.findIndex(s => s.id === status.id);
+    if (currentIndex >= deliverableStatusMasters.length - 1) return;
+
+    const targetStatus = deliverableStatusMasters[currentIndex + 1];
+    await updateDeliverableStatusMaster(status.id, { order: targetStatus.order });
+    await updateDeliverableStatusMaster(targetStatus.id, { order: status.order });
+
+    const updated = await getDeliverableStatusMasters();
+    setDeliverableStatusMasters(updated);
+  };
+
   const handleDeleteDeliverableStatus = async (status: DeliverableStatusMaster) => {
     // 使用中かチェック（削除確認の前に）
     const isInUse = await checkMasterInUse('deliverableStatus', status.id);
@@ -205,6 +257,30 @@ export default function MasterManagement() {
     } catch (error) {
       console.error('Failed to save assignee:', error);
     }
+  };
+
+  const handleMoveAssigneeUp = async (assignee: AssigneeMaster) => {
+    const currentIndex = assigneeMasters.findIndex(a => a.id === assignee.id);
+    if (currentIndex <= 0) return;
+
+    const targetAssignee = assigneeMasters[currentIndex - 1];
+    await updateAssigneeMaster(assignee.id, { order: targetAssignee.order });
+    await updateAssigneeMaster(targetAssignee.id, { order: assignee.order });
+
+    const updated = await getAssigneeMasters();
+    setAssigneeMasters(updated);
+  };
+
+  const handleMoveAssigneeDown = async (assignee: AssigneeMaster) => {
+    const currentIndex = assigneeMasters.findIndex(a => a.id === assignee.id);
+    if (currentIndex >= assigneeMasters.length - 1) return;
+
+    const targetAssignee = assigneeMasters[currentIndex + 1];
+    await updateAssigneeMaster(assignee.id, { order: targetAssignee.order });
+    await updateAssigneeMaster(targetAssignee.id, { order: assignee.order });
+
+    const updated = await getAssigneeMasters();
+    setAssigneeMasters(updated);
   };
 
   const handleDeleteAssignee = async (assignee: AssigneeMaster) => {
@@ -350,6 +426,30 @@ export default function MasterManagement() {
     }
   };
 
+  const handleMoveDeliverableTypeUp = async (deliverableType: DeliverableTypeMaster) => {
+    const currentIndex = deliverableTypeMasters.findIndex(d => d.id === deliverableType.id);
+    if (currentIndex <= 0) return;
+
+    const targetType = deliverableTypeMasters[currentIndex - 1];
+    await updateDeliverableTypeMaster(deliverableType.id, { order: targetType.order });
+    await updateDeliverableTypeMaster(targetType.id, { order: deliverableType.order });
+
+    const updated = await getDeliverableTypeMasters();
+    setDeliverableTypeMasters(updated);
+  };
+
+  const handleMoveDeliverableTypeDown = async (deliverableType: DeliverableTypeMaster) => {
+    const currentIndex = deliverableTypeMasters.findIndex(d => d.id === deliverableType.id);
+    if (currentIndex >= deliverableTypeMasters.length - 1) return;
+
+    const targetType = deliverableTypeMasters[currentIndex + 1];
+    await updateDeliverableTypeMaster(deliverableType.id, { order: targetType.order });
+    await updateDeliverableTypeMaster(targetType.id, { order: deliverableType.order });
+
+    const updated = await getDeliverableTypeMasters();
+    setDeliverableTypeMasters(updated);
+  };
+
   const handleDeleteDeliverableType = async (deliverableType: DeliverableTypeMaster) => {
     // 使用中かチェック（削除確認の前に）
     const isInUse = await checkMasterInUse('deliverableType', deliverableType.id);
@@ -382,7 +482,7 @@ export default function MasterManagement() {
       </div>
 
       <div className="master-list">
-        {taskStatusMasters.map((status) => (
+        {taskStatusMasters.map((status, index) => (
           <div key={status.id} className="master-item">
             <div className="master-item-content">
               <div
@@ -392,8 +492,10 @@ export default function MasterManagement() {
               <span>{status.name}</span>
             </div>
             <div className="master-item-actions">
-              <button onClick={() => handleEditTaskStatus(status)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
-              <button onClick={() => handleDeleteTaskStatus(status)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
+              <button onClick={() => handleMoveTaskStatusUp(status)} className="btn-icon" disabled={index === 0} title="上に移動"><MdArrowUpward size={20} style={{color: index === 0 ? '#9ca3af' : '#6b7280'}} /></button>
+              <button onClick={() => handleMoveTaskStatusDown(status)} className="btn-icon" disabled={index === taskStatusMasters.length - 1} title="下に移動"><MdArrowDownward size={20} style={{color: index === taskStatusMasters.length - 1 ? '#9ca3af' : '#6b7280'}} /></button>
+              <button onClick={() => handleEditTaskStatus(status)} className="btn-icon" title="編集"><MdEdit size={20} style={{color: '#3b82f6'}} /></button>
+              <button onClick={() => handleDeleteTaskStatus(status)} className="btn-icon delete" title="削除"><MdDelete size={20} style={{color: '#ef4444'}} /></button>
             </div>
           </div>
         ))}
@@ -411,7 +513,7 @@ export default function MasterManagement() {
       </div>
 
       <div className="master-list">
-        {deliverableStatusMasters.map((status) => (
+        {deliverableStatusMasters.map((status, index) => (
           <div key={status.id} className="master-item">
             <div className="master-item-content">
               <div
@@ -421,8 +523,10 @@ export default function MasterManagement() {
               <span>{status.name}</span>
             </div>
             <div className="master-item-actions">
-              <button onClick={() => handleEditDeliverableStatus(status)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
-              <button onClick={() => handleDeleteDeliverableStatus(status)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
+              <button onClick={() => handleMoveDeliverableStatusUp(status)} className="btn-icon" disabled={index === 0} title="上に移動"><MdArrowUpward size={20} style={{color: index === 0 ? '#9ca3af' : '#6b7280'}} /></button>
+              <button onClick={() => handleMoveDeliverableStatusDown(status)} className="btn-icon" disabled={index === deliverableStatusMasters.length - 1} title="下に移動"><MdArrowDownward size={20} style={{color: index === deliverableStatusMasters.length - 1 ? '#9ca3af' : '#6b7280'}} /></button>
+              <button onClick={() => handleEditDeliverableStatus(status)} className="btn-icon" title="編集"><MdEdit size={20} style={{color: '#3b82f6'}} /></button>
+              <button onClick={() => handleDeleteDeliverableStatus(status)} className="btn-icon delete" title="削除"><MdDelete size={20} style={{color: '#ef4444'}} /></button>
             </div>
           </div>
         ))}
@@ -440,7 +544,7 @@ export default function MasterManagement() {
       </div>
       
       <div className="master-list">
-        {assigneeMasters.map((assignee) => (
+        {assigneeMasters.map((assignee, index) => (
           <div key={assignee.id} className="master-item">
             <div className="master-item-content">
               <div className="assignee-info">
@@ -449,10 +553,17 @@ export default function MasterManagement() {
                 {assignee.role && <span className="assignee-role">{assignee.role}</span>}
               </div>
             </div>
-            <div className="master-item-actions">
-              <button onClick={() => handleEditAssignee(assignee)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
-              <button onClick={() => handleDeleteAssignee(assignee)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
-            </div>
+            {assignee.id === 1 ? (
+              // 「未割当」(ID=1)の場合はボタンを表示しない
+              <div className="master-item-actions"></div>
+            ) : (
+              <div className="master-item-actions">
+                <button onClick={() => handleMoveAssigneeUp(assignee)} className="btn-icon" disabled={index === 0} title="上に移動"><MdArrowUpward size={20} style={{color: index === 0 ? '#9ca3af' : '#6b7280'}} /></button>
+                <button onClick={() => handleMoveAssigneeDown(assignee)} className="btn-icon" disabled={index === assigneeMasters.length - 1} title="下に移動"><MdArrowDownward size={20} style={{color: index === assigneeMasters.length - 1 ? '#9ca3af' : '#6b7280'}} /></button>
+                <button onClick={() => handleEditAssignee(assignee)} className="btn-icon" title="編集"><MdEdit size={20} style={{color: '#3b82f6'}} /></button>
+                <button onClick={() => handleDeleteAssignee(assignee)} className="btn-icon delete" title="削除"><MdDelete size={20} style={{color: '#ef4444'}} /></button>
+              </div>
+            )}
           </div>
         ))}
         {assigneeMasters.length === 0 && (
@@ -474,19 +585,21 @@ export default function MasterManagement() {
       </div>
       
       <div className="master-list">
-        {deliverableTypeMasters.map((deliverableType) => (
+        {deliverableTypeMasters.map((deliverableType, index) => (
           <div key={deliverableType.id} className="master-item">
             <div className="master-item-content">
               <span className="type-icon">{renderIcon(deliverableType.icon, 24)}</span>
               <span className="type-name">{deliverableType.name}</span>
-              <div 
-                className="type-color" 
+              <div
+                className="type-color"
                 style={{ backgroundColor: deliverableType.color }}
               ></div>
             </div>
             <div className="master-item-actions">
-              <button onClick={() => handleEditDeliverableType(deliverableType)} className="btn-icon"><MdEdit size={24} style={{color: '#3b82f6'}} /></button>
-              <button onClick={() => handleDeleteDeliverableType(deliverableType)} className="btn-icon delete"><MdDelete size={24} style={{color: '#ef4444'}} /></button>
+              <button onClick={() => handleMoveDeliverableTypeUp(deliverableType)} className="btn-icon" disabled={index === 0} title="上に移動"><MdArrowUpward size={20} style={{color: index === 0 ? '#9ca3af' : '#6b7280'}} /></button>
+              <button onClick={() => handleMoveDeliverableTypeDown(deliverableType)} className="btn-icon" disabled={index === deliverableTypeMasters.length - 1} title="下に移動"><MdArrowDownward size={20} style={{color: index === deliverableTypeMasters.length - 1 ? '#9ca3af' : '#6b7280'}} /></button>
+              <button onClick={() => handleEditDeliverableType(deliverableType)} className="btn-icon" title="編集"><MdEdit size={20} style={{color: '#3b82f6'}} /></button>
+              <button onClick={() => handleDeleteDeliverableType(deliverableType)} className="btn-icon delete" title="削除"><MdDelete size={20} style={{color: '#ef4444'}} /></button>
             </div>
           </div>
         ))}
