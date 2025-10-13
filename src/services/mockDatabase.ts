@@ -378,7 +378,7 @@ export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
 
   // orderフィールドがない場合はマイグレーション
   let needsMigration = false;
-  uniqueMasters = uniqueMasters.map((master, index) => {
+  uniqueMasters = uniqueMasters.map((master: TaskStatusMaster, index: number) => {
     if (master.order === undefined || master.order === null) {
       needsMigration = true;
       return { ...master, order: index + 1 };
@@ -392,7 +392,7 @@ export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
   }
 
   // order順にソート
-  return uniqueMasters.sort((a, b) => a.order - b.order);
+  return uniqueMasters.sort((a: TaskStatusMaster, b: TaskStatusMaster) => a.order - b.order);
 }
 
 export async function createTaskStatusMaster(status: Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<TaskStatusMaster> {
@@ -465,7 +465,7 @@ export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMa
 
   // orderフィールドがない場合はマイグレーション
   let needsMigration = false;
-  uniqueMasters = uniqueMasters.map((master, index) => {
+  uniqueMasters = uniqueMasters.map((master: DeliverableStatusMaster, index: number) => {
     if (master.order === undefined || master.order === null) {
       needsMigration = true;
       return { ...master, order: index + 1 };
@@ -479,7 +479,7 @@ export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMa
   }
 
   // order順にソート
-  return uniqueMasters.sort((a, b) => a.order - b.order);
+  return uniqueMasters.sort((a: DeliverableStatusMaster, b: DeliverableStatusMaster) => a.order - b.order);
 }
 
 export async function createDeliverableStatusMaster(status: Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<DeliverableStatusMaster> {
@@ -585,7 +585,7 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
 
   // orderフィールドがない場合はマイグレーション
   let needsMigration = false;
-  uniqueMasters = uniqueMasters.map((master, index) => {
+  uniqueMasters = uniqueMasters.map((master: AssigneeMaster, index: number) => {
     if (master.order === undefined || master.order === null) {
       needsMigration = true;
       return { ...master, order: index + 1 };
@@ -599,7 +599,7 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
   }
 
   // order順にソート
-  return uniqueMasters.sort((a, b) => a.order - b.order);
+  return uniqueMasters.sort((a: AssigneeMaster, b: AssigneeMaster) => a.order - b.order);
 }
 
 export async function createAssigneeMaster(name: string, email?: string, role?: string): Promise<AssigneeMaster> {
@@ -673,7 +673,7 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
 
   // orderフィールドがない場合はマイグレーション
   let needsMigration = false;
-  uniqueMasters = uniqueMasters.map((master, index) => {
+  uniqueMasters = uniqueMasters.map((master: DeliverableTypeMaster, index: number) => {
     if (master.order === undefined || master.order === null) {
       needsMigration = true;
       return { ...master, order: index + 1 };
@@ -687,7 +687,7 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
   }
 
   // order順にソート
-  return uniqueMasters.sort((a, b) => a.order - b.order);
+  return uniqueMasters.sort((a: DeliverableTypeMaster, b: DeliverableTypeMaster) => a.order - b.order);
 }
 
 export async function createDeliverableTypeMaster(name: string, icon: string, color: string): Promise<DeliverableTypeMaster> {
