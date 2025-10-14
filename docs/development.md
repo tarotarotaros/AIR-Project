@@ -516,33 +516,89 @@ git push origin v0.1.0
 
 ### 自動ビルド（CI/CD）
 
-将来的にGitHub Actionsで自動ビルドを設定する場合の例：
+GitHub Actionsによる自動ビルド・リリースが設定済みです。
 
-```yaml
-# .github/workflows/release.yml
-name: Release Build
+#### 利用可能なワークフロー
 
-on:
-  push:
-    tags:
-      - 'v*'
+**1. リリースビルド（`.github/workflows/release.yml`）**
 
-jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - uses: dtolnay/rust-toolchain@stable
-      - run: npm install
-      - run: npm run tauri build
-      - uses: actions/upload-artifact@v3
-        with:
-          name: windows-installer
-          path: src-tauri/target/release/bundle/**/*
+タグをプッシュすると自動的にリリースビルドが実行され、GitHubリリースが作成されます。
+
+```bash
+# バージョンタグを作成してプッシュ
+git tag v0.1.0
+git push origin v0.1.0
 ```
+
+実行内容:
+- Windows用ビルドを実行
+- 以下のファイルをGitHubリリースに自動アップロード:
+  - `AIR-Project.exe`（スタンドアロン実行ファイル）
+  - `AIR-Project_X.X.X_x64_en-US.msi`（MSIインストーラー）
+  - `AIR-Project_X.X.X_x64-setup.exe`（NSISインストーラー）
+- リリースノートを自動生成
+
+**2. CI（継続的インテグレーション）（`.github/workflows/ci.yml`）**
+
+mainまたはdevelopブランチへのpush/PRで自動的にビルドテストが実行されます。
+
+実行内容:
+- Lintチェック
+- 型チェック
+- フロントエンドビルド
+- Tauriアプリのデバッグビルド
+- ビルド成果物をアーティファクトとして保存（7日間）
+
+#### リリース手順
+
+1. **バージョンを更新**
+   ```bash
+   # src-tauri/tauri.conf.jsonのversionを更新
+   # 例: "version": "0.1.0"
+   ```
+
+2. **変更をコミット**
+   ```bash
+   git add src-tauri/tauri.conf.json
+   git commit -m "chore: bump version to 0.1.0"
+   git push origin main
+   ```
+
+3. **タグを作成してプッシュ**
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+4. **GitHubでリリースを確認**
+   - GitHub ActionsでビルドJob実行（約5-10分）
+   - リリースページに自動的にバイナリがアップロードされる
+   - https://github.com/YOUR_USERNAME/AIR-Project/releases
+
+#### トラブルシューティング
+
+**ビルドが失敗する場合:**
+
+1. GitHub Actionsのログを確認
+   - リポジトリの「Actions」タブから失敗したワークフローを開く
+   - エラーメッセージを確認
+
+2. ローカルでビルドを確認
+   ```bash
+   npm run tauri build
+   ```
+
+3. 一般的な問題:
+   - `tauri.conf.json`のバージョン番号が正しいか確認
+   - アイコンファイルが存在するか確認（`src-tauri/icons/`）
+   - 依存関係が最新か確認（`npm ci`）
+
+**リリースが作成されない場合:**
+
+- タグ名が`v`で始まっているか確認（例: `v0.1.0`）
+- GitHub Actionsの権限設定を確認
+  - Settings → Actions → General → Workflow permissions
+  - "Read and write permissions"が有効になっているか確認
 
 ## 参考リンク
 

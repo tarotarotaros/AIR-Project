@@ -19,9 +19,22 @@
       }
     },
     "bundle": {
-      "active": false,
-      "targets": "all",
-      "identifier": "com.airproject.dev"
+      "active": true,
+      "targets": ["msi", "nsis"],
+      "identifier": "com.airproject.dev",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "resources": [],
+      "externalBin": [],
+      "copyright": "",
+      "category": "DeveloperTool",
+      "shortDescription": "AIR Project Management Tool",
+      "longDescription": "A desktop application for project management with process flow diagrams."
     },
     "security": {
       "csp": null
