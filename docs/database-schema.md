@@ -320,79 +320,110 @@ CREATE INDEX idx_flow_connections_project_id ON flow_connections(project_id);
 
 ## ER図
 
-```
-┌─────────────────┐
-│   projects      │
-│─────────────────│
-│ id (PK)         │◄─────┐
-│ name            │      │
-│ description     │      │
-│ created_at      │      │
-│ updated_at      │      │
-└─────────────────┘      │
-                         │
-    ┌────────────────────┴─────────────────────┐
-    │                                          │
-┌───▼──────────────────┐           ┌──────────▼───────────┐
-│   tasks              │           │   deliverables       │
-│──────────────────────│           │──────────────────────│
-│ id (PK)              │           │ id (PK)              │
-│ project_id (FK)      │           │ project_id (FK)      │
-│ name                 │           │ name                 │
-│ description          │           │ description          │
-│ status (FK) ─────────┼───┐       │ status (FK) ─────────┼───┐
-│ priority             │   │       │ type (FK) ───────────┼─┐ │
-│ start_date           │   │       │ due_date             │ │ │
-│ end_date             │   │       │ position_x           │ │ │
-│ duration_days        │   │       │ position_y           │ │ │
-│ assigned_to (FK) ────┼─┐ │       │ created_at           │ │ │
-│ position_x           │ │ │       │ updated_at           │ │ │
-│ position_y           │ │ │       └──────────────────────┘ │ │
-│ created_at           │ │ │                                │ │
-│ updated_at           │ │ │                                │ │
-└──────────────────────┘ │ │                                │ │
-                         │ │                                │ │
-    ┌────────────────────┘ │        ┌───────────────────────┘ │
-    │                      │        │                         │
-┌───▼──────────────────┐  │  ┌─────▼──────────────────┐      │
-│ assignee_masters     │  │  │ deliverable_type_      │      │
-│──────────────────────│  │  │      masters           │      │
-│ id (PK)              │  │  │──────────────────────  │      │
-│ name                 │  │  │ id (PK)                │      │
-│ email                │  │  │ name                   │      │
-│ role                 │  │  │ icon                   │      │
-│ order                │  │  │ color                  │      │
-│ created_at           │  │  │ order                  │      │
-│ updated_at           │  │  │ created_at             │      │
-└──────────────────────┘  │  │ updated_at             │      │
-                          │  └────────────────────────┘      │
-                          │                                  │
-    ┌─────────────────────┴──────────────────────────────────┘
-    │
-┌───▼──────────────────┐     ┌───────────────────────────┐
-│ task_status_masters  │     │ deliverable_status_       │
-│──────────────────────│     │      masters              │
-│ id (PK)              │     │───────────────────────────│
-│ name                 │     │ id (PK)                   │
-│ color                │     │ name                      │
-│ order                │     │ color                     │
-│ created_at           │     │ order                     │
-│ updated_at           │     │ created_at                │
-└──────────────────────┘     │ updated_at                │
-                             └───────────────────────────┘
+```mermaid
+erDiagram
+    projects ||--o{ tasks : "has"
+    projects ||--o{ deliverables : "has"
+    projects ||--o{ flow_connections : "has"
 
-┌───────────────────────┐
-│  flow_connections     │
-│───────────────────────│
-│ id (PK)               │
-│ project_id (FK)       │
-│ source_type           │
-│ source_id             │
-│ target_type           │
-│ target_id             │
-│ created_at            │
-│ updated_at            │
-└───────────────────────┘
+    task_status_masters ||--o{ tasks : "categorizes"
+    assignee_masters ||--o{ tasks : "assigned_to"
+
+    deliverable_status_masters ||--o{ deliverables : "categorizes"
+    deliverable_type_masters ||--o{ deliverables : "categorizes"
+
+    projects {
+        INTEGER id PK
+        TEXT name
+        TEXT description
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    tasks {
+        INTEGER id PK
+        INTEGER project_id FK
+        TEXT name
+        TEXT description
+        INTEGER status FK
+        TEXT priority
+        TEXT start_date
+        TEXT end_date
+        INTEGER duration_days
+        INTEGER assigned_to FK
+        REAL position_x
+        REAL position_y
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    deliverables {
+        INTEGER id PK
+        INTEGER project_id FK
+        TEXT name
+        TEXT description
+        INTEGER status FK
+        INTEGER type FK
+        TEXT due_date
+        REAL position_x
+        REAL position_y
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    flow_connections {
+        INTEGER id PK
+        INTEGER project_id FK
+        TEXT source_type
+        INTEGER source_id
+        TEXT target_type
+        INTEGER target_id
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    task_status_masters {
+        INTEGER id PK
+        TEXT name
+        TEXT color
+        INTEGER order
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    deliverable_status_masters {
+        INTEGER id PK
+        TEXT name
+        TEXT color
+        INTEGER order
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    assignee_masters {
+        INTEGER id PK
+        TEXT name
+        TEXT email
+        TEXT role
+        INTEGER order
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    deliverable_type_masters {
+        INTEGER id PK
+        TEXT name
+        TEXT icon
+        TEXT color
+        INTEGER order
+        DATETIME created_at
+        DATETIME updated_at
+    }
+
+    schema_version {
+        INTEGER version PK
+        DATETIME applied_at
+    }
 ```
 
 ## データ整合性ルール
