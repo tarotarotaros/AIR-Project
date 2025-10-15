@@ -27,7 +27,7 @@
   },
   "productName": "AIR-Project",
   "mainBinaryName": "AIR-Project",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "identifier": "com.airproject.dev",
   "plugins": {},
   "app": {
