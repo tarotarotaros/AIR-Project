@@ -1,17 +1,20 @@
 // データベースアダプター - TauriとWeb両方で動作
 import { Project, Task, Deliverable, FlowConnection, TaskStatusMaster, DeliverableStatusMaster, AssigneeMaster, DeliverableTypeMaster } from '../types';
 
-// 環境判定
+// 環境判定（Tauri v2対応）
 const isTauriApp = () => {
-  // 一時的にTauri環境でもmockDatabaseを使用
-  return false;
-  // return typeof window !== 'undefined' && (window as any).__TAURI__;
+  try {
+    return typeof window !== 'undefined' &&
+           ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+  } catch {
+    return false;
+  }
 };
 
 // プロジェクト関連
 export async function getProjects(): Promise<Project[]> {
   if (isTauriApp()) {
-    const { getProjects } = await import('./database');
+    const { getProjects } = await import('./sqliteDatabase');
     return getProjects();
   } else {
     const { getProjects } = await import('./mockDatabase');
@@ -21,7 +24,7 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function createProject(name: string, description?: string): Promise<Project> {
   if (isTauriApp()) {
-    const { createProject } = await import('./database');
+    const { createProject } = await import('./sqliteDatabase');
     return createProject(name, description);
   } else {
     const { createProject } = await import('./mockDatabase');
@@ -31,7 +34,7 @@ export async function createProject(name: string, description?: string): Promise
 
 export async function updateProject(id: number, updates: Partial<Pick<Project, 'name' | 'description'>>): Promise<Project> {
   if (isTauriApp()) {
-    const { updateProject } = await import('./database');
+    const { updateProject } = await import('./sqliteDatabase');
     return updateProject(id, updates);
   } else {
     const { updateProject } = await import('./mockDatabase');
@@ -41,7 +44,7 @@ export async function updateProject(id: number, updates: Partial<Pick<Project, '
 
 export async function deleteProject(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteProject } = await import('./database');
+    const { deleteProject } = await import('./sqliteDatabase');
     return deleteProject(id);
   } else {
     const { deleteProject } = await import('./mockDatabase');
@@ -52,7 +55,7 @@ export async function deleteProject(id: number): Promise<void> {
 // タスク関連
 export async function getTasks(projectId: number): Promise<Task[]> {
   if (isTauriApp()) {
-    const { getTasks } = await import('./database');
+    const { getTasks } = await import('./sqliteDatabase');
     return getTasks(projectId);
   } else {
     const { getTasks } = await import('./mockDatabase');
@@ -62,7 +65,7 @@ export async function getTasks(projectId: number): Promise<Task[]> {
 
 export async function createTask(task: Omit<Task, 'id' | 'created_at' | 'updated_at'>): Promise<Task> {
   if (isTauriApp()) {
-    const { createTask } = await import('./database');
+    const { createTask } = await import('./sqliteDatabase');
     return createTask(task);
   } else {
     const { createTask } = await import('./mockDatabase');
@@ -72,7 +75,7 @@ export async function createTask(task: Omit<Task, 'id' | 'created_at' | 'updated
 
 export async function updateTask(id: number, updates: Partial<Omit<Task, 'id' | 'created_at' | 'updated_at'>>): Promise<Task> {
   if (isTauriApp()) {
-    const { updateTask } = await import('./database');
+    const { updateTask } = await import('./sqliteDatabase');
     return updateTask(id, updates);
   } else {
     const { updateTask } = await import('./mockDatabase');
@@ -82,7 +85,7 @@ export async function updateTask(id: number, updates: Partial<Omit<Task, 'id' | 
 
 export async function deleteTask(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteTask } = await import('./database');
+    const { deleteTask } = await import('./sqliteDatabase');
     return deleteTask(id);
   } else {
     const { deleteTask } = await import('./mockDatabase');
@@ -92,7 +95,7 @@ export async function deleteTask(id: number): Promise<void> {
 
 export async function updateTaskPosition(id: number, x: number, y: number): Promise<void> {
   if (isTauriApp()) {
-    const { updateTaskPosition } = await import('./database');
+    const { updateTaskPosition } = await import('./sqliteDatabase');
     return updateTaskPosition(id, x, y);
   } else {
     const { updateTaskPosition } = await import('./mockDatabase');
@@ -103,7 +106,7 @@ export async function updateTaskPosition(id: number, x: number, y: number): Prom
 // 成果物関連
 export async function getDeliverables(projectId: number): Promise<Deliverable[]> {
   if (isTauriApp()) {
-    const { getDeliverables } = await import('./database');
+    const { getDeliverables } = await import('./sqliteDatabase');
     return getDeliverables(projectId);
   } else {
     const { getDeliverables } = await import('./mockDatabase');
@@ -113,7 +116,7 @@ export async function getDeliverables(projectId: number): Promise<Deliverable[]>
 
 export async function createDeliverable(deliverable: Omit<Deliverable, 'id' | 'created_at' | 'updated_at'>): Promise<Deliverable> {
   if (isTauriApp()) {
-    const { createDeliverable } = await import('./database');
+    const { createDeliverable } = await import('./sqliteDatabase');
     return createDeliverable(deliverable);
   } else {
     const { createDeliverable } = await import('./mockDatabase');
@@ -123,7 +126,7 @@ export async function createDeliverable(deliverable: Omit<Deliverable, 'id' | 'c
 
 export async function updateDeliverable(id: number, updates: Partial<Omit<Deliverable, 'id' | 'created_at' | 'updated_at'>>): Promise<Deliverable> {
   if (isTauriApp()) {
-    const { updateDeliverable } = await import('./database');
+    const { updateDeliverable } = await import('./sqliteDatabase');
     return updateDeliverable(id, updates);
   } else {
     const { updateDeliverable } = await import('./mockDatabase');
@@ -133,7 +136,7 @@ export async function updateDeliverable(id: number, updates: Partial<Omit<Delive
 
 export async function deleteDeliverable(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteDeliverable } = await import('./database');
+    const { deleteDeliverable } = await import('./sqliteDatabase');
     return deleteDeliverable(id);
   } else {
     const { deleteDeliverable } = await import('./mockDatabase');
@@ -143,7 +146,7 @@ export async function deleteDeliverable(id: number): Promise<void> {
 
 export async function updateDeliverablePosition(id: number, x: number, y: number): Promise<void> {
   if (isTauriApp()) {
-    const { updateDeliverablePosition } = await import('./database');
+    const { updateDeliverablePosition } = await import('./sqliteDatabase');
     return updateDeliverablePosition(id, x, y);
   } else {
     const { updateDeliverablePosition } = await import('./mockDatabase');
@@ -154,7 +157,7 @@ export async function updateDeliverablePosition(id: number, x: number, y: number
 // 接続関連
 export async function getConnections(projectId: number): Promise<FlowConnection[]> {
   if (isTauriApp()) {
-    const { getConnections } = await import('./database');
+    const { getConnections } = await import('./sqliteDatabase');
     return getConnections(projectId);
   } else {
     const { getConnections } = await import('./mockDatabase');
@@ -164,7 +167,7 @@ export async function getConnections(projectId: number): Promise<FlowConnection[
 
 export async function createConnection(connection: Omit<FlowConnection, 'id' | 'created_at' | 'updated_at'>): Promise<FlowConnection> {
   if (isTauriApp()) {
-    const { createConnection } = await import('./database');
+    const { createConnection } = await import('./sqliteDatabase');
     return createConnection(connection);
   } else {
     const { createConnection } = await import('./mockDatabase');
@@ -174,7 +177,7 @@ export async function createConnection(connection: Omit<FlowConnection, 'id' | '
 
 export async function deleteConnection(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteConnection } = await import('./database');
+    const { deleteConnection } = await import('./sqliteDatabase');
     return deleteConnection(id);
   } else {
     const { deleteConnection } = await import('./mockDatabase');
@@ -184,7 +187,7 @@ export async function deleteConnection(id: number): Promise<void> {
 
 export async function deleteConnectionsByNodeId(nodeType: 'task' | 'deliverable', nodeId: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteConnectionsByNodeId } = await import('./database');
+    const { deleteConnectionsByNodeId } = await import('./sqliteDatabase');
     return deleteConnectionsByNodeId(nodeType, nodeId);
   } else {
     const { deleteConnectionsByNodeId } = await import('./mockDatabase');
@@ -196,7 +199,7 @@ export async function deleteConnectionsByNodeId(nodeType: 'task' | 'deliverable'
 // Task Status Master
 export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
   if (isTauriApp()) {
-    const { getTaskStatusMasters } = await import('./database');
+    const { getTaskStatusMasters } = await import('./sqliteDatabase');
     return getTaskStatusMasters();
   } else {
     const { getTaskStatusMasters } = await import('./mockDatabase');
@@ -206,7 +209,7 @@ export async function getTaskStatusMasters(): Promise<TaskStatusMaster[]> {
 
 export async function createTaskStatusMaster(status: Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<TaskStatusMaster> {
   if (isTauriApp()) {
-    const { createTaskStatusMaster } = await import('./database');
+    const { createTaskStatusMaster } = await import('./sqliteDatabase');
     return createTaskStatusMaster(status);
   } else {
     const { createTaskStatusMaster } = await import('./mockDatabase');
@@ -216,7 +219,7 @@ export async function createTaskStatusMaster(status: Omit<TaskStatusMaster, 'id'
 
 export async function updateTaskStatusMaster(id: number, updates: Partial<Omit<TaskStatusMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<TaskStatusMaster> {
   if (isTauriApp()) {
-    const { updateTaskStatusMaster } = await import('./database');
+    const { updateTaskStatusMaster } = await import('./sqliteDatabase');
     return updateTaskStatusMaster(id, updates);
   } else {
     const { updateTaskStatusMaster } = await import('./mockDatabase');
@@ -226,7 +229,7 @@ export async function updateTaskStatusMaster(id: number, updates: Partial<Omit<T
 
 export async function deleteTaskStatusMaster(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteTaskStatusMaster } = await import('./database');
+    const { deleteTaskStatusMaster } = await import('./sqliteDatabase');
     return deleteTaskStatusMaster(id);
   } else {
     const { deleteTaskStatusMaster } = await import('./mockDatabase');
@@ -237,7 +240,7 @@ export async function deleteTaskStatusMaster(id: number): Promise<void> {
 // Deliverable Status Master
 export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMaster[]> {
   if (isTauriApp()) {
-    const { getDeliverableStatusMasters } = await import('./database');
+    const { getDeliverableStatusMasters } = await import('./sqliteDatabase');
     return getDeliverableStatusMasters();
   } else {
     const { getDeliverableStatusMasters } = await import('./mockDatabase');
@@ -247,7 +250,7 @@ export async function getDeliverableStatusMasters(): Promise<DeliverableStatusMa
 
 export async function createDeliverableStatusMaster(status: Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>): Promise<DeliverableStatusMaster> {
   if (isTauriApp()) {
-    const { createDeliverableStatusMaster } = await import('./database');
+    const { createDeliverableStatusMaster } = await import('./sqliteDatabase');
     return createDeliverableStatusMaster(status);
   } else {
     const { createDeliverableStatusMaster } = await import('./mockDatabase');
@@ -257,7 +260,7 @@ export async function createDeliverableStatusMaster(status: Omit<DeliverableStat
 
 export async function updateDeliverableStatusMaster(id: number, updates: Partial<Omit<DeliverableStatusMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<DeliverableStatusMaster> {
   if (isTauriApp()) {
-    const { updateDeliverableStatusMaster } = await import('./database');
+    const { updateDeliverableStatusMaster } = await import('./sqliteDatabase');
     return updateDeliverableStatusMaster(id, updates);
   } else {
     const { updateDeliverableStatusMaster } = await import('./mockDatabase');
@@ -267,7 +270,7 @@ export async function updateDeliverableStatusMaster(id: number, updates: Partial
 
 export async function deleteDeliverableStatusMaster(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteDeliverableStatusMaster } = await import('./database');
+    const { deleteDeliverableStatusMaster } = await import('./sqliteDatabase');
     return deleteDeliverableStatusMaster(id);
   } else {
     const { deleteDeliverableStatusMaster } = await import('./mockDatabase');
@@ -278,7 +281,7 @@ export async function deleteDeliverableStatusMaster(id: number): Promise<void> {
 // 担当者マスタ関連
 export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
   if (isTauriApp()) {
-    const { getAssigneeMasters } = await import('./database');
+    const { getAssigneeMasters } = await import('./sqliteDatabase');
     return getAssigneeMasters();
   } else {
     const { getAssigneeMasters } = await import('./mockDatabase');
@@ -288,7 +291,7 @@ export async function getAssigneeMasters(): Promise<AssigneeMaster[]> {
 
 export async function createAssigneeMaster(assignee: Omit<AssigneeMaster, 'id' | 'created_at' | 'updated_at'>): Promise<AssigneeMaster> {
   if (isTauriApp()) {
-    const { createAssigneeMaster } = await import('./database');
+    const { createAssigneeMaster } = await import('./sqliteDatabase');
     return createAssigneeMaster(assignee);
   } else {
     const { createAssigneeMaster } = await import('./mockDatabase');
@@ -298,7 +301,7 @@ export async function createAssigneeMaster(assignee: Omit<AssigneeMaster, 'id' |
 
 export async function updateAssigneeMaster(id: number, updates: Partial<Omit<AssigneeMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<AssigneeMaster> {
   if (isTauriApp()) {
-    const { updateAssigneeMaster } = await import('./database');
+    const { updateAssigneeMaster } = await import('./sqliteDatabase');
     return updateAssigneeMaster(id, updates);
   } else {
     const { updateAssigneeMaster } = await import('./mockDatabase');
@@ -308,7 +311,7 @@ export async function updateAssigneeMaster(id: number, updates: Partial<Omit<Ass
 
 export async function deleteAssigneeMaster(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteAssigneeMaster } = await import('./database');
+    const { deleteAssigneeMaster } = await import('./sqliteDatabase');
     return deleteAssigneeMaster(id);
   } else {
     const { deleteAssigneeMaster } = await import('./mockDatabase');
@@ -319,7 +322,7 @@ export async function deleteAssigneeMaster(id: number): Promise<void> {
 // 成果物種類マスタ関連
 export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster[]> {
   if (isTauriApp()) {
-    const { getDeliverableTypeMasters } = await import('./database');
+    const { getDeliverableTypeMasters } = await import('./sqliteDatabase');
     return getDeliverableTypeMasters();
   } else {
     const { getDeliverableTypeMasters } = await import('./mockDatabase');
@@ -329,7 +332,7 @@ export async function getDeliverableTypeMasters(): Promise<DeliverableTypeMaster
 
 export async function createDeliverableTypeMaster(type: Omit<DeliverableTypeMaster, 'id' | 'created_at' | 'updated_at'>): Promise<DeliverableTypeMaster> {
   if (isTauriApp()) {
-    const { createDeliverableTypeMaster } = await import('./database');
+    const { createDeliverableTypeMaster } = await import('./sqliteDatabase');
     return createDeliverableTypeMaster(type);
   } else {
     const { createDeliverableTypeMaster } = await import('./mockDatabase');
@@ -339,7 +342,7 @@ export async function createDeliverableTypeMaster(type: Omit<DeliverableTypeMast
 
 export async function updateDeliverableTypeMaster(id: number, updates: Partial<Omit<DeliverableTypeMaster, 'id' | 'created_at' | 'updated_at'>>): Promise<DeliverableTypeMaster> {
   if (isTauriApp()) {
-    const { updateDeliverableTypeMaster } = await import('./database');
+    const { updateDeliverableTypeMaster } = await import('./sqliteDatabase');
     return updateDeliverableTypeMaster(id, updates);
   } else {
     const { updateDeliverableTypeMaster } = await import('./mockDatabase');
@@ -349,7 +352,7 @@ export async function updateDeliverableTypeMaster(id: number, updates: Partial<O
 
 export async function deleteDeliverableTypeMaster(id: number): Promise<void> {
   if (isTauriApp()) {
-    const { deleteDeliverableTypeMaster } = await import('./database');
+    const { deleteDeliverableTypeMaster } = await import('./sqliteDatabase');
     return deleteDeliverableTypeMaster(id);
   } else {
     const { deleteDeliverableTypeMaster } = await import('./mockDatabase');

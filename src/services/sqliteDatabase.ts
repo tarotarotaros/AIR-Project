@@ -171,30 +171,30 @@ async function createInitialSchema(): Promise<void> {
     "CREATE INDEX IF NOT EXISTS idx_flow_connections_project_id ON flow_connections(project_id)",
   ];
 
-  // デフォルトデータ
+  // デフォルトデータ（既存データがある場合はスキップ）
   const defaultData = [
     // タスクステータスマスタ
-    `INSERT INTO task_status_masters (id, name, color, "order") VALUES
+    `INSERT OR IGNORE INTO task_status_masters (id, name, color, "order") VALUES
       (1, '未着手', '#9ca3af', 1),
       (2, '進行中', '#3b82f6', 2),
       (3, '完了', '#10b981', 3),
       (4, 'ブロック', '#ef4444', 4)`,
 
     // 成果物ステータスマスタ
-    `INSERT INTO deliverable_status_masters (id, name, color, "order") VALUES
+    `INSERT OR IGNORE INTO deliverable_status_masters (id, name, color, "order") VALUES
       (1, '未作成', '#9ca3af', 1),
       (2, '作成中', '#3b82f6', 2),
       (3, 'レビュー中', '#f59e0b', 3),
       (4, '完成', '#10b981', 4)`,
 
     // 担当者マスタ
-    `INSERT INTO assignee_masters (id, name, email, role, "order") VALUES
+    `INSERT OR IGNORE INTO assignee_masters (id, name, email, role, "order") VALUES
       (1, '未割当', '', '', 1),
       (2, '山田太郎', 'yamada@example.com', 'エンジニア', 2),
       (3, '佐藤花子', 'sato@example.com', 'デザイナー', 3)`,
 
     // 成果物種類マスタ
-    `INSERT INTO deliverable_type_masters (id, name, icon, color, "order") VALUES
+    `INSERT OR IGNORE INTO deliverable_type_masters (id, name, icon, color, "order") VALUES
       (1, '設計書', 'MdDescription', '#3b82f6', 1),
       (2, 'コード', 'MdCode', '#10b981', 2),
       (3, 'テストケース', 'MdFactCheck', '#f59e0b', 3),
@@ -256,7 +256,26 @@ export async function createProject(name: string, description?: string): Promise
     [name, description || null]
   );
 
-  const projects: Project[] = await db.select("SELECT * FROM projects WHERE id = last_insert_rowid()");
+  // Tauri SQLプラグインのexecuteは { lastInsertId: number, rowsAffected: number } を返す
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted project ID");
+  }
+
+  const projects: Project[] = await db.select("SELECT * FROM projects WHERE id = $1", [newId]);
+
+  if (!projects || projects.length === 0) {
+    throw new Error(`Failed to retrieve created project with ID ${newId}`);
+  }
+
   return projects[0];
 }
 
@@ -324,7 +343,7 @@ export async function createTask(task: Omit<Task, "id" | "created_at" | "updated
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO tasks (project_id, name, description, status, priority, start_date, end_date, duration_days, assigned_to, position_x, position_y)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
     [
@@ -342,7 +361,25 @@ export async function createTask(task: Omit<Task, "id" | "created_at" | "updated
     ]
   );
 
-  const tasks: Task[] = await db.select("SELECT * FROM tasks WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted task ID");
+  }
+
+  const tasks: Task[] = await db.select("SELECT * FROM tasks WHERE id = $1", [newId]);
+
+  if (!tasks || tasks.length === 0) {
+    throw new Error(`Failed to retrieve created task with ID ${newId}`);
+  }
+
   return tasks[0];
 }
 
@@ -442,7 +479,7 @@ export async function createDeliverable(deliverable: Omit<Deliverable, "id" | "c
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO deliverables (project_id, name, description, status, type, due_date, position_x, position_y)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
@@ -457,7 +494,25 @@ export async function createDeliverable(deliverable: Omit<Deliverable, "id" | "c
     ]
   );
 
-  const deliverables: Deliverable[] = await db.select("SELECT * FROM deliverables WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted deliverable ID");
+  }
+
+  const deliverables: Deliverable[] = await db.select("SELECT * FROM deliverables WHERE id = $1", [newId]);
+
+  if (!deliverables || deliverables.length === 0) {
+    throw new Error(`Failed to retrieve created deliverable with ID ${newId}`);
+  }
+
   return deliverables[0];
 }
 
@@ -545,7 +600,7 @@ export async function createFlowConnection(connection: Omit<FlowConnection, "id"
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO flow_connections (project_id, source_type, source_id, target_type, target_id)
      VALUES ($1, $2, $3, $4, $5)`,
     [
@@ -557,7 +612,25 @@ export async function createFlowConnection(connection: Omit<FlowConnection, "id"
     ]
   );
 
-  const connections: FlowConnection[] = await db.select("SELECT * FROM flow_connections WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted flow connection ID");
+  }
+
+  const connections: FlowConnection[] = await db.select("SELECT * FROM flow_connections WHERE id = $1", [newId]);
+
+  if (!connections || connections.length === 0) {
+    throw new Error(`Failed to retrieve created flow connection with ID ${newId}`);
+  }
+
   return connections[0];
 }
 
@@ -585,12 +658,30 @@ export async function createTaskStatusMaster(master: Omit<TaskStatusMaster, "id"
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO task_status_masters (name, color, "order") VALUES ($1, $2, $3)`,
     [master.name, master.color, master.order]
   );
 
-  const masters: TaskStatusMaster[] = await db.select("SELECT * FROM task_status_masters WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted task status master ID");
+  }
+
+  const masters: TaskStatusMaster[] = await db.select("SELECT * FROM task_status_masters WHERE id = $1", [newId]);
+
+  if (!masters || masters.length === 0) {
+    throw new Error(`Failed to retrieve created task status master with ID ${newId}`);
+  }
+
   return masters[0];
 }
 
@@ -647,12 +738,30 @@ export async function createDeliverableStatusMaster(master: Omit<DeliverableStat
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO deliverable_status_masters (name, color, "order") VALUES ($1, $2, $3)`,
     [master.name, master.color, master.order]
   );
 
-  const masters: DeliverableStatusMaster[] = await db.select("SELECT * FROM deliverable_status_masters WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted deliverable status master ID");
+  }
+
+  const masters: DeliverableStatusMaster[] = await db.select("SELECT * FROM deliverable_status_masters WHERE id = $1", [newId]);
+
+  if (!masters || masters.length === 0) {
+    throw new Error(`Failed to retrieve created deliverable status master with ID ${newId}`);
+  }
+
   return masters[0];
 }
 
@@ -709,12 +818,30 @@ export async function createAssigneeMaster(master: Omit<AssigneeMaster, "id" | "
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO assignee_masters (name, email, role, "order") VALUES ($1, $2, $3, $4)`,
     [master.name, master.email || null, master.role || null, master.order]
   );
 
-  const masters: AssigneeMaster[] = await db.select("SELECT * FROM assignee_masters WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted assignee master ID");
+  }
+
+  const masters: AssigneeMaster[] = await db.select("SELECT * FROM assignee_masters WHERE id = $1", [newId]);
+
+  if (!masters || masters.length === 0) {
+    throw new Error(`Failed to retrieve created assignee master with ID ${newId}`);
+  }
+
   return masters[0];
 }
 
@@ -775,12 +902,30 @@ export async function createDeliverableTypeMaster(master: Omit<DeliverableTypeMa
   await initializeDatabase();
   if (!db) throw new Error("Database not initialized");
 
-  await db.execute(
+  const result = await db.execute(
     `INSERT INTO deliverable_type_masters (name, icon, color, "order") VALUES ($1, $2, $3, $4)`,
     [master.name, master.icon, master.color, master.order]
   );
 
-  const masters: DeliverableTypeMaster[] = await db.select("SELECT * FROM deliverable_type_masters WHERE id = last_insert_rowid()");
+  let newId: number;
+
+  if (typeof result === 'object' && result !== null && 'lastInsertId' in result) {
+    newId = (result as any).lastInsertId;
+  } else {
+    const lastIdResult: any[] = await db.select("SELECT last_insert_rowid() as id");
+    newId = lastIdResult[0]?.id;
+  }
+
+  if (!newId) {
+    throw new Error("Failed to get inserted deliverable type master ID");
+  }
+
+  const masters: DeliverableTypeMaster[] = await db.select("SELECT * FROM deliverable_type_masters WHERE id = $1", [newId]);
+
+  if (!masters || masters.length === 0) {
+    throw new Error(`Failed to retrieve created deliverable type master with ID ${newId}`);
+  }
+
   return masters[0];
 }
 
@@ -826,4 +971,39 @@ export async function deleteDeliverableTypeMaster(id: number): Promise<void> {
   if (!db) throw new Error("Database not initialized");
 
   await db.execute("DELETE FROM deliverable_type_masters WHERE id = $1", [id]);
+}
+
+// ===========================================
+// Helper functions for adapter compatibility
+// ===========================================
+
+export async function updateTaskPosition(id: number, x: number, y: number): Promise<void> {
+  await updateTask(id, { position_x: x, position_y: y });
+}
+
+export async function updateDeliverablePosition(id: number, x: number, y: number): Promise<void> {
+  await updateDeliverable(id, { position_x: x, position_y: y });
+}
+
+export async function getConnections(projectId: number): Promise<FlowConnection[]> {
+  return getFlowConnections(projectId);
+}
+
+export async function createConnection(connection: Omit<FlowConnection, "id" | "created_at" | "updated_at">): Promise<FlowConnection> {
+  return createFlowConnection(connection);
+}
+
+export async function deleteConnection(id: number): Promise<void> {
+  return deleteFlowConnection(id);
+}
+
+export async function deleteConnectionsByNodeId(nodeType: "task" | "deliverable", nodeId: number): Promise<void> {
+  await initializeDatabase();
+  if (!db) throw new Error("Database not initialized");
+
+  // source または target として使用されている接続を削除
+  await db.execute(
+    "DELETE FROM flow_connections WHERE (source_type = $1 AND source_id = $2) OR (target_type = $1 AND target_id = $2)",
+    [nodeType, nodeId]
+  );
 }

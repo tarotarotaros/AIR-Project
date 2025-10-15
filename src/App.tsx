@@ -1,10 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MdMenu, MdMenuOpen, MdSettings } from 'react-icons/md';
 import { Project } from "./types";
 import ProjectList from "./components/ProjectList";
 import ProjectTabs from "./components/ProjectTabs";
 import Modal from "./components/Modal";
 import MasterManagement from "./components/MasterManagement";
+import { initializeDatabase } from "./services/sqliteDatabase";
+
+// Tauri環境かどうかを判定
+const isTauriApp = () => {
+  try {
+    // Tauri v2では window.__TAURI_INTERNALS__ が存在する
+    return typeof window !== 'undefined' &&
+           ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+  } catch {
+    return false;
+  }
+};
 
 function App() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -12,6 +24,32 @@ function App() {
   const [projectListKey, setProjectListKey] = useState(0);
   const [projectTabsKey, setProjectTabsKey] = useState(0);
   const [isMasterManagementOpen, setIsMasterManagementOpen] = useState(false);
+
+  // データベースの初期化（アプリ起動時に1回だけ実行）
+  useEffect(() => {
+    const init = async () => {
+      const isTauri = isTauriApp();
+      console.log('[App] Checking Tauri environment...', {
+        isTauri,
+        hasTauriInternals: typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window,
+        hasTauri: typeof window !== 'undefined' && '__TAURI__' in window
+      });
+
+      // Tauri環境の場合のみSQLiteを初期化
+      if (isTauri) {
+        console.log('[App] Tauri environment detected, initializing database...');
+        try {
+          await initializeDatabase();
+          console.log('[App] Database initialized successfully');
+        } catch (error) {
+          console.error('[App] Failed to initialize database:', error);
+        }
+      } else {
+        console.log('[App] Not in Tauri environment, skipping database initialization');
+      }
+    };
+    init();
+  }, []);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
