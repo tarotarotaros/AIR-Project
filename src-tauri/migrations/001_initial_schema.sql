@@ -124,17 +124,17 @@ CREATE INDEX IF NOT EXISTS idx_flow_connections_target ON flow_connections(targe
 
 -- タスクステータスマスタのデフォルトデータ
 INSERT INTO task_status_masters (id, name, color, "order") VALUES
-  (1, '未着手', '#9ca3af', 1),
-  (2, '進行中', '#3b82f6', 2),
-  (3, '完了', '#10b981', 3),
-  (4, 'ブロック', '#ef4444', 4);
+  (1, '未着手', '#f3f4f6', 1),
+  (2, '進行中', '#dbeafe', 2),
+  (3, '完了', '#d1fae5', 3),
+  (4, 'ブロック', '#fee2e2', 4);
 
 -- 成果物ステータスマスタのデフォルトデータ
 INSERT INTO deliverable_status_masters (id, name, color, "order") VALUES
-  (1, '未作成', '#9ca3af', 1),
-  (2, '作成中', '#3b82f6', 2),
-  (3, 'レビュー中', '#f59e0b', 3),
-  (4, '完成', '#10b981', 4);
+  (1, '未作成', '#f3f4f6', 1),
+  (2, '作成中', '#dbeafe', 2),
+  (3, 'レビュー中', '#fef3c7', 3),
+  (4, '完成', '#d1fae5', 4);
 
 -- 担当者マスタのデフォルトデータ
 INSERT INTO assignee_masters (id, name, email, role, "order") VALUES
