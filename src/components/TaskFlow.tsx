@@ -15,6 +15,8 @@ import { toPng } from 'html-to-image';
 import 'reactflow/dist/style.css';
 import { MdList, MdInventory, MdFileDownload, MdFileUpload, MdPictureAsPdf, MdCheckCircle, MdError, MdHourglassEmpty, MdAutoAwesome } from 'react-icons/md';
 import dagre from 'dagre';
+import { save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { Task, Project, Deliverable, FlowConnection, AssigneeMaster, DeliverableTypeMaster, TaskStatusMaster, DeliverableStatusMaster } from '../types';
 import {
   getTasks, createTask, updateTask, updateTaskPosition, deleteTask,
@@ -530,7 +532,7 @@ export default function TaskFlow({ project }: TaskFlowProps) {
     );
   }
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!project) return;
 
     console.log('Exporting connections:', connections);
@@ -605,16 +607,33 @@ ${JSON.stringify(exportData, null, 2)}
 \`\`\`
 `;
 
-    // ファイルをダウンロード
-    const blob = new Blob([markdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_flow.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Tauriのファイルダイアログを使用してファイルパスを取得
+      const filePath = await save({
+        defaultPath: `${project.name.replace(/[^a-zA-Z0-9]/g, '_')}_flow.md`,
+        filters: [{
+          name: 'Markdown',
+          extensions: ['md']
+        }]
+      });
+
+      if (filePath) {
+        // Tauriのファイルシステム APIを使用してファイルを保存
+        await writeTextFile(filePath, markdown);
+        console.log('File exported successfully:', filePath);
+
+        setAlertTitle('エクスポート完了');
+        setAlertMessage('プロセスフローをエクスポートしました。');
+        setAlertType('info');
+        setIsAlertModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      setAlertTitle('エラー');
+      setAlertMessage('エクスポートに失敗しました。');
+      setAlertType('error');
+      setIsAlertModalOpen(true);
+    }
   };
 
   const handleImport = () => {
